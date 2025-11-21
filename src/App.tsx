@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { Home } from './pages/Home/Home';
 import { Login } from './pages/Login/Login';
