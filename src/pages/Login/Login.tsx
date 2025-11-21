@@ -1,46 +1,53 @@
 ﻿import React, { useState } from 'react';
-import { api, setAuthToken } from '../../api/api-client';
+import { useNavigate } from 'react-router-dom';
+import { useAppStore } from '../../core/stores/app-store';
 
-export const Login: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
-    const [credentials, setCredentials] = useState({ username: '', password: '' });
+export const Login: React.FC = () => {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const { login } = useAppStore();
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
+        setError('');
 
         try {
-            const response = await api.auth.login(credentials);
-            setAuthToken(response.data.token);
-            onLogin();
-        } catch (err: any) {
-            setError(err.message || 'Login failed');
+            await login(username, password);
+            navigate('/dashboard');
+        } catch (err) {
+            setError('Login failed. Please check your credentials.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div style={{ maxWidth: '300px', margin: '50px auto' }}>
-            <h2>Login</h2>
-            <form onSubmit={handleLogin}>
-                <div>
+        <div className="login-container">
+            <form onSubmit={handleSubmit} className="login-form">
+                <h2>Login</h2>
+                {error && <div className="error-message">{error}</div>}
+                <div className="form-group">
+                    <label htmlFor="username">Username:</label>
                     <input
                         type="text"
-                        placeholder="Username"
-                        value={credentials.username}
-                        onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         required
                     />
                 </div>
-                <div>
+                <div className="form-group">
+                    <label htmlFor="password">Password:</label>
                     <input
                         type="password"
-                        placeholder="Password"
-                        value={credentials.password}
-                        onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                        id="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                     />
                 </div>
@@ -48,7 +55,6 @@ export const Login: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
             </form>
-            {error && <div style={{ color: 'red' }}>{error}</div>}
         </div>
     );
 };
