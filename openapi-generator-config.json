@@ -1,0 +1,10 @@
+{
+  "npmName": "api-client",
+  "npmVersion": "1.0.0",
+  "supportsES6": true,
+  "modelPropertyNaming": "camelCase",
+  "withInterfaces": true,
+  "useSingleRequestParameter": true,
+  "apiPackage": "api",
+  "modelPackage": "models"
+}

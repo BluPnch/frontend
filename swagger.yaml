@@ -1,0 +1,1543 @@
+﻿openapi: 3.0.1
+info:
+  title: Greenhouse API
+  version: v1
+paths:
+  /api/v1/administrators:
+    post:
+      tags:
+        - Administrator
+      summary: Создать нового администратора.
+      requestBody:
+        description: Данные для создания администратора.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.CreateAdministratorRequestDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.CreateAdministratorRequestDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.CreateAdministratorRequestDto'
+      responses:
+        '201':
+          description: Администратор успешно создан.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+        '400':
+          description: Некорректные данные администратора.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка на стороне сервера.
+    get:
+      tags:
+        - Administrator
+      summary: Получить администраторов с возможностью фильтрации.
+      parameters:
+        - name: surname
+          in: query
+          description: Фамилия администратора (опционально).
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Имя администратора (опционально).
+          schema:
+            type: string
+        - name: patronymic
+          in: query
+          description: Отчество администратора (опционально).
+          schema:
+            type: string
+        - name: phoneNumber
+          in: query
+          description: Номер телефона администратора (опционально).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список администраторов успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+        '400':
+          description: Некорректные параметры запроса.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Администратор не найден.
+        '500':
+          description: Ошибка на стороне сервера.
+  '/api/v1/administrators/{id}':
+    get:
+      tags:
+        - Administrator
+      summary: Получить администратора по идентификатору.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор администратора.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Администратор успешно получен.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AdministratorDTO'
+        '400':
+          description: Некорректный идентификатор.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Администратор не найден.
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Аутентификация пользователя
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.LoginRequestDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.LoginRequestDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.LoginRequestDto'
+      responses:
+        '200':
+          description: Успешный вход в систему
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.LoginResponseDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.LoginResponseDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.LoginResponseDto'
+        '401':
+          description: Неверные учетные данные или ошибка валидации
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Регистрация нового пользователя
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.RegisterRequestDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.RegisterRequestDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.RegisterRequestDto'
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.LoginResponseDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.LoginResponseDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.LoginResponseDto'
+        '400':
+          description: Ошибка валидации
+        '409':
+          description: Пользователь с таким email уже существует
+        '500':
+          description: Server Error
+  /api/v1/clients:
+    get:
+      tags:
+        - Client
+      summary: Получить клиентов с возможностью фильтрации.
+      parameters:
+        - name: companyName
+          in: query
+          description: Название компании клиента (опционально).
+          schema:
+            type: string
+        - name: phoneNumber
+          in: query
+          description: Телефон клиента (опционально).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список клиентов успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.ClientDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.ClientDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.ClientDTO'
+        '400':
+          description: Некорректные параметры запроса.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Клиент не найден.
+        '500':
+          description: Ошибка на стороне сервера.
+  '/api/v1/clients/{id}':
+    get:
+      tags:
+        - Client
+      summary: Получить клиента по идентификатору.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор клиента.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Клиент успешно получен.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.ClientDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.ClientDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.ClientDTO'
+        '400':
+          description: Некорректный идентификатор.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Клиент не найден.
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/clients/plants:
+    get:
+      tags:
+        - Client
+      summary: Получить растения клиента.
+      responses:
+        '200':
+          description: Список растений успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Клиент не найден
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/clients/journal-records:
+    get:
+      tags:
+        - Client
+      summary: Получить записи журнала клиента.
+      responses:
+        '200':
+          description: Список записей успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Клиент не найден
+        '500':
+          description: Ошибка на стороне сервера.
+  '/api/v1/clients/{clientId}/role':
+    patch:
+      tags:
+        - Client
+      summary: Изменить роль пользователя.
+      parameters:
+        - name: clientId
+          in: path
+          description: Идентификатор пользователя.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Данные для изменения роли.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.UpdateUserRoleRequestDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.UpdateUserRoleRequestDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.UpdateUserRoleRequestDto'
+      responses:
+        '200':
+          description: Роль пользователя успешно изменена.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AuthUserDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AuthUserDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.AuthUserDTO'
+        '400':
+          description: Некорректные данные.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Пользователь не найден.
+        '500':
+          description: Ошибка на стороне сервера.
+  /Documentation:
+    get:
+      tags:
+        - Documentation
+      responses:
+        '200':
+          description: Success
+  /api/v1/employees:
+    get:
+      tags:
+        - Employee
+      summary: Получить сотрудников с возможностью фильтрации.
+      parameters:
+        - name: phoneNumber
+          in: query
+          description: Номер телефона сотрудника (опционально).
+          schema:
+            type: string
+        - name: task
+          in: query
+          description: Задача сотрудника (опционально).
+          schema:
+            type: string
+        - name: plantDomain
+          in: query
+          description: Сфера растений сотрудника (опционально).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список сотрудников успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.EmployeeDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.EmployeeDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.EmployeeDTO'
+        '400':
+          description: Некорректные параметры запроса.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Сотрудник не найден.
+        '500':
+          description: Ошибка на стороне сервера.
+  '/api/v1/employees/{id}':
+    get:
+      tags:
+        - Employee
+      summary: Получить сотрудника по идентификатору.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор сотрудника.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Сотрудник успешно получен.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.EmployeeDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.EmployeeDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.EmployeeDTO'
+        '400':
+          description: Некорректный идентификатор.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Сотрудник не найден.
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/employees/plants:
+    get:
+      tags:
+        - Employee
+      summary: Получить растения сотрудника.
+      parameters:
+        - name: employeeId
+          in: query
+          description: Идентификатор сотрудника.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Список растений успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+        '400':
+          description: Некорректные данные.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Сотрудник не найден.
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/growth-stages:
+    get:
+      tags:
+        - GrowthStage
+      summary: Получить стадии роста с возможностью фильтрации.
+      parameters:
+        - name: name
+          in: query
+          description: Название стадии роста (опционально).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список стадий роста успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.GrowthStageDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.GrowthStageDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.GrowthStageDTO'
+        '400':
+          description: Некорректные параметры запроса.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Стадия роста не найдена.
+        '500':
+          description: Ошибка на стороне сервера.
+  '/api/v1/growth-stages/{id}':
+    get:
+      tags:
+        - GrowthStage
+      summary: Получить стадию роста по идентификатору.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор стадии роста.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Стадия роста успешно получена.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.GrowthStageDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.GrowthStageDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.GrowthStageDTO'
+        '400':
+          description: Некорректный идентификатор.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Стадия роста не найдена.
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/journal-records:
+    get:
+      tags:
+        - JournalRecord
+      summary: Получить записи журнала с возможностью фильтрации.
+      parameters:
+        - name: plantId
+          in: query
+          description: Идентификатор растения (опционально).
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          description: Начальная дата периода (опционально).
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: Конечная дата периода (опционально).
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Список записей успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+        '400':
+          description: Некорректные параметры запроса.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Записи не найдены.
+        '500':
+          description: Ошибка на стороне сервера.
+    post:
+      tags:
+        - JournalRecord
+      summary: Создать новую запись в журнале.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+      responses:
+        '201':
+          description: Запись успешно создана.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+        '400':
+          description: Некорректные данные записи.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка на стороне сервера.
+  '/api/v1/journal-records/{id}':
+    get:
+      tags:
+        - JournalRecord
+      summary: Получить запись журнала по идентификатору.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор записи журнала.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Запись журнала успешно получена.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+        '400':
+          description: Некорректный идентификатор.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Запись журнала не найдена.
+        '500':
+          description: Ошибка на стороне сервера.
+    delete:
+      tags:
+        - JournalRecord
+      summary: Удалить запись в журнале.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор записи.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Запись успешно удалена.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Запись не найдена.
+        '500':
+          description: Ошибка на стороне сервера.
+    put:
+      tags:
+        - JournalRecord
+      summary: Обновить запись в журнале.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор записи.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.JournalRecordDTO'
+      responses:
+        '204':
+          description: Запись успешно обновлена.
+        '400':
+          description: Некорректные данные записи.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Запись не найдена.
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/plants:
+    get:
+      tags:
+        - Plant
+      summary: Получить растения с возможностью фильтрации.
+      parameters:
+        - name: family
+          in: query
+          description: Семейство растения (опционально).
+          schema:
+            type: string
+        - name: species
+          in: query
+          description: Вид растения (опционально).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список растений успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+        '400':
+          description: Некорректные параметры запроса.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Растения не найдены.
+        '500':
+          description: Ошибка на стороне сервера.
+    post:
+      tags:
+        - Plant
+      summary: Создать новое растение.
+      requestBody:
+        description: Данные растения.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+      responses:
+        '201':
+          description: Растение успешно создано.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+        '400':
+          description: Некорректные данные.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка на стороне сервера.
+  '/api/v1/plants/{id}':
+    get:
+      tags:
+        - Plant
+      summary: Получить растение по идентификатору.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор растения.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Растение успешно получено.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+        '400':
+          description: Некорректный идентификатор.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Растение не найдено.
+        '500':
+          description: Ошибка на стороне сервера.
+    put:
+      tags:
+        - Plant
+      summary: Обновить данные растения.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор растения.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.PlantDTO'
+      responses:
+        '204':
+          description: Растение успешно обновлено.
+        '400':
+          description: Некорректные данные растения.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Растение не найдено.
+        '500':
+          description: Ошибка на стороне сервера.
+    delete:
+      tags:
+        - Plant
+      summary: Удалить растение.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор растения.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Растение успешно удалено.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Растение не найдено.
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/seeds:
+    get:
+      tags:
+        - Seed
+      summary: Получить семена с возможностью фильтрации.
+      parameters:
+        - name: maturity
+          in: query
+          description: Зрелость семени (опционально).
+          schema:
+            type: string
+        - name: viability
+          in: query
+          description: Жизнеспособность семени (опционально).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список семян успешно получен.
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+        '400':
+          description: Некорректные параметры запроса.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Семена не найдены.
+        '500':
+          description: Ошибка на стороне сервера.
+    post:
+      tags:
+        - Seed
+      summary: Создать новое семя.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+      responses:
+        '201':
+          description: Семя успешно создано.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+        '400':
+          description: Некорректные данные семени.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка на стороне сервера.
+  '/api/v1/seeds/{id}':
+    get:
+      tags:
+        - Seed
+      summary: Получить семя по идентификатору.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор семени.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Семя успешно получено.
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+        '400':
+          description: Некорректный идентификатор.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Семя не найдено.
+        '500':
+          description: Ошибка на стороне сервера.
+    put:
+      tags:
+        - Seed
+      summary: Обновить данные семени.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор семени.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/Server.Controllers.Models.SeedDTO'
+      responses:
+        '204':
+          description: Семя успешно обновлено.
+        '400':
+          description: Некорректные данные семени.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Семя не найдено.
+        '500':
+          description: Ошибка на стороне сервера.
+    delete:
+      tags:
+        - Seed
+      summary: Удалить семя.
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор семени.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Семя успешно удалено.
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Семя не найдено.
+        '500':
+          description: Ошибка на стороне сервера.
+  /api/v1/users/me:
+    get:
+      tags:
+        - User
+      summary: Получение информации о текущем пользователе
+      responses:
+        '200':
+          description: Информация о пользователе
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.UserDTO'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.UserDTO'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Server.Controllers.Models.UserDTO'
+        '400':
+          description: Ошибка обработки запроса
+        '401':
+          description: Пользователь не авторизован
+        '404':
+          description: Пользователь не найден
+        '500':
+          description: Server Error
+  /api/v1/users:
+    get:
+      tags:
+        - User
+      summary: Получение списка всех пользователей (только для администраторов)
+      responses:
+        '200':
+          description: Список пользователей получен успешно
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.AuthUserDTO'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.AuthUserDTO'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server.Controllers.Models.AuthUserDTO'
+        '401':
+          description: Пользователь не авторизован
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка на стороне сервера
+components:
+  schemas:
+    Domain.Models.Enums.EnumAuth:
+      enum:
+        - 0
+        - 1
+        - 2
+      type: integer
+      format: int32
+    Server.Controllers.Models.AdministratorDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        surname:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        patronymic:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+      additionalProperties: false
+    Server.Controllers.Models.AuthUserDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          nullable: true
+        passwordHash:
+          type: string
+          nullable: true
+        role:
+          $ref: '#/components/schemas/Server.Controllers.Models.Enums.EnumAuth'
+      additionalProperties: false
+    Server.Controllers.Models.ClientDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyName:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+      additionalProperties: false
+    Server.Controllers.Models.CreateAdministratorRequestDto:
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          nullable: true
+        surname:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        patronymic:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+      additionalProperties: false
+    Server.Controllers.Models.EmployeeDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        surname:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        patronymic:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        task:
+          type: string
+          nullable: true
+        plantDomain:
+          type: string
+          nullable: true
+        administratorId:
+          type: string
+          format: uuid
+      additionalProperties: false
+    Server.Controllers.Models.Enums.EnumAuth:
+      enum:
+        - 0
+        - 1
+        - 2
+      type: integer
+      format: int32
+    Server.Controllers.Models.Enums.EnumCondition:
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
+      type: integer
+      format: int32
+    Server.Controllers.Models.Enums.EnumFlowers:
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+      type: integer
+      format: int32
+    Server.Controllers.Models.Enums.EnumFruit:
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
+        - 11
+        - 12
+        - 13
+        - 14
+        - 15
+        - 16
+        - 17
+        - 18
+        - 19
+      type: integer
+      format: int32
+    Server.Controllers.Models.Enums.EnumLight:
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+      type: integer
+      description: Требования к освещению для проращивания семян
+      format: int32
+    Server.Controllers.Models.Enums.EnumReproduction:
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
+        - 11
+      type: integer
+      format: int32
+    Server.Controllers.Models.Enums.EnumViability:
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+      type: integer
+      format: int32
+    Server.Controllers.Models.GrowthStageDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+      additionalProperties: false
+    Server.Controllers.Models.JournalRecordDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        plantId:
+          type: string
+          format: uuid
+        growthStageId:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        plantHeight:
+          type: number
+          format: double
+        fruitCount:
+          type: integer
+          format: int32
+        condition:
+          $ref: '#/components/schemas/Server.Controllers.Models.Enums.EnumCondition'
+        date:
+          type: string
+          format: date-time
+      additionalProperties: false
+    Server.Controllers.Models.LoginRequestDto:
+      type: object
+      properties:
+        username:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+      additionalProperties: false
+    Server.Controllers.Models.LoginResponseDto:
+      type: object
+      properties:
+        username:
+          type: string
+          nullable: true
+        token:
+          type: string
+          nullable: true
+      additionalProperties: false
+    Server.Controllers.Models.PlantDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+        specie:
+          type: string
+          nullable: true
+        family:
+          type: string
+          nullable: true
+        flower:
+          $ref: '#/components/schemas/Server.Controllers.Models.Enums.EnumFlowers'
+        fruit:
+          $ref: '#/components/schemas/Server.Controllers.Models.Enums.EnumFruit'
+        reproduction:
+          $ref: '#/components/schemas/Server.Controllers.Models.Enums.EnumReproduction'
+      additionalProperties: false
+    Server.Controllers.Models.RegisterRequestDto:
+      type: object
+      properties:
+        email:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+      additionalProperties: false
+    Server.Controllers.Models.SeedDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        plantId:
+          type: string
+          format: uuid
+        maturity:
+          type: string
+          nullable: true
+        viability:
+          $ref: '#/components/schemas/Server.Controllers.Models.Enums.EnumViability'
+        lightRequirements:
+          $ref: '#/components/schemas/Server.Controllers.Models.Enums.EnumLight'
+        waterRequirements:
+          type: string
+          nullable: true
+        temperatureRequirements:
+          type: integer
+          format: int32
+      additionalProperties: false
+    Server.Controllers.Models.UpdateUserRoleRequestDto:
+      type: object
+      properties:
+        newRole:
+          $ref: '#/components/schemas/Domain.Models.Enums.EnumAuth'
+      additionalProperties: false
+    Server.Controllers.Models.UserDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        phoneNumber:
+          type: string
+          nullable: true
+      additionalProperties: false
+  securitySchemes:
+    Bearer:
+      type: apiKey
+      description: 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"'
+      name: Authorization
+      in: header
+security:
+  - Bearer: [ ]
