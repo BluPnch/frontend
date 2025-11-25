@@ -1,3 +1,4 @@
+// core/stores/app-store.ts
 import { create } from 'zustand';
 import { authService } from '../services/auth-service';
 import { userService } from '../services/user-service';
@@ -10,9 +11,10 @@ interface AppStore {
     register: (email: string, password: string) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
+    getCurrentUser: () => Promise<any>; // Добавьте эту строку
 }
 
-export const useAppStore = create<AppStore>((set) => ({
+export const useAppStore = create<AppStore>((set, get) => ({
     user: null,
     isAuthenticated: false,
     loading: true,
@@ -88,6 +90,18 @@ export const useAppStore = create<AppStore>((set) => ({
                 isAuthenticated: false,
                 loading: false
             });
+        }
+    },
+
+    // ДОБАВЬТЕ ЭТОТ МЕТОД
+    getCurrentUser: async () => {
+        try {
+            const currentUser = await userService.getCurrentUser();
+            set({ user: currentUser });
+            return currentUser;
+        } catch (error) {
+            console.error('Failed to get current user in store:', error);
+            throw error;
         }
     }
 }));

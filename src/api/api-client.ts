@@ -1,14 +1,28 @@
 ﻿import { Configuration } from './generated';
-import { authService } from '../core/services/auth-service';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5097';
+
+let getTokenFn: (() => string | null) | null = null;
+
+export const setTokenGetter = (fn: () => string | null) => {
+    getTokenFn = fn;
+};
 
 export const createApiConfiguration = (): Configuration => {
+    console.log('Creating API configuration with basePath:', API_BASE_URL);
+
+    const token = getTokenFn ? getTokenFn() : localStorage.getItem('token');
+    console.log('Current token:', token ? `Bearer ${token.substring(0, 20)}...` : 'missing');
+
     return new Configuration({
-        basePath: 'http://localhost:5097',
-        accessToken: authService.getToken() || undefined,
+        basePath: API_BASE_URL,
+        apiKey: token ? `Bearer ${token}` : undefined, 
+        accessToken: token || undefined,
     });
 };
 
 export const updateApiConfiguration = () => {
-    const config = createApiConfiguration();
-    return config;
+    return createApiConfiguration();
 };
+
+export { API_BASE_URL };
