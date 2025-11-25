@@ -24,8 +24,6 @@ export const AdminDashboard: React.FC = () => {
                         <div className="value">8</div>
                     </div>
                 </div>
-
-                {/* Здесь будут компоненты для управления */}
             </div>
         </Layout>
     );

@@ -6,12 +6,20 @@ import { AdminDashboard } from '../pages/AdminDashboard/AdminDashboard';
 import { EmployeeDashboard } from '../pages/EmployeeDashboard/EmployeeDashboard';
 import { ClientDashboard } from '../pages/ClientDashboard/ClientDashboard';
 import { ProtectedRoute } from './ProtectedRoute';
+import { authService } from '../core/services/auth-service';
 
 export const AppRouter: React.FC = () => {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/login" element={<Login />} />
+                <Route
+                    path="/login"
+                    element={
+                        authService.isAuthenticated() ?
+                            <Navigate to="/dashboard" replace /> :
+                            <Login />
+                    }
+                />
 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={

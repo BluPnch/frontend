@@ -96,7 +96,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
         }
     },
 
-    // ДОБАВЬТЕ ЭТОТ МЕТОД
     getCurrentUser: async () => {
         try {
             const currentUser = await userService.getCurrentUser();
