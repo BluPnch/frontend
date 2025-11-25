@@ -22,6 +22,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
     login: async (username: string, password: string) => {
         try {
             const userData = await authService.login(username, password);
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             const currentUser = await userService.getCurrentUser();
 
             set({
