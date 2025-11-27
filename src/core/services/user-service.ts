@@ -25,17 +25,47 @@ class UserService {
 
         const axiosInstance = globalAxios.create();
 
+        // Добавляем интерцептор, который ВСЕГДА добавляет токен к запросам
         axiosInstance.interceptors.request.use(
             (request) => {
-                console.log('🚀 Outgoing request:', {
-                    url: request.url,
-                    method: request.method,
-                    headers: request.headers,
-                    authHeader: request.headers?.Authorization
-                });
+                const token = this.getToken();
+
+                console.log('🚀 Outgoing request details:');
+                console.log('   URL:', request.url);
+                console.log('   Method:', request.method);
+                console.log('   Current Token:', token ? `${token.substring(0, 50)}...` : 'missing');
+
+                // ВРУЧНУЮ добавляем заголовок Authorization ко всем запросам
+                if (token && request.headers) {
+                    request.headers.Authorization = `Bearer ${token}`;
+                    console.log('   ✅ Added Authorization header:', `Bearer ${token.substring(0, 20)}...`);
+                } else {
+                    console.log('   ❌ No token available for Authorization header');
+                }
+
+                console.log('   Final Headers:', request.headers);
+
                 return request;
             },
             (error) => {
+                console.error('❌ Request interceptor error:', error);
+                return Promise.reject(error);
+            }
+        );
+
+        // Response interceptor остается
+        axiosInstance.interceptors.response.use(
+            (response) => {
+                console.log('✅ Response received:');
+                console.log('   Status:', response.status);
+                console.log('   URL:', response.config.url);
+                return response;
+            },
+            (error) => {
+                console.error('❌ Response error:');
+                console.log('   URL:', error.config?.url);
+                console.log('   Status:', error.response?.status);
+                console.log('   Auth Header in request:', error.config?.headers?.Authorization);
                 return Promise.reject(error);
             }
         );
@@ -47,8 +77,53 @@ class UserService {
     public updateApiConfig() {
         console.log('Updating API configuration with new token...');
         const config = createApiConfiguration();
-        this.userApi = new UserApi(config);
-        this.authApi = new AuthApi(config);
+
+        // Создаем новую axios instance с интерцепторами
+        const axiosInstance = globalAxios.create();
+
+        // Копируем интерцепторы из initializeApis
+        axiosInstance.interceptors.request.use(
+            (request) => {
+                const token = this.getToken();
+                console.log('🚀 Outgoing request details:');
+                console.log('   URL:', request.url);
+                console.log('   Method:', request.method);
+                console.log('   Current Token:', token ? `${token.substring(0, 50)}...` : 'missing');
+
+                if (token && request.headers) {
+                    request.headers.Authorization = `Bearer ${token}`;
+                    console.log('   ✅ Added Authorization header:', `Bearer ${token.substring(0, 20)}...`);
+                } else {
+                    console.log('   ❌ No token available for Authorization header');
+                }
+
+                return request;
+            },
+            (error) => {
+                console.error('❌ Request interceptor error:', error);
+                return Promise.reject(error);
+            }
+        );
+
+        axiosInstance.interceptors.response.use(
+            (response) => {
+                console.log('✅ Response received:');
+                console.log('   Status:', response.status);
+                console.log('   URL:', response.config.url);
+                return response;
+            },
+            (error) => {
+                console.error('❌ Response error:');
+                console.log('   URL:', error.config?.url);
+                console.log('   Status:', error.response?.status);
+                console.log('   Auth Header in request:', error.config?.headers?.Authorization);
+                return Promise.reject(error);
+            }
+        );
+
+        // Создаем API с кастомной axios instance
+        this.userApi = new UserApi(config, undefined, axiosInstance);
+        this.authApi = new AuthApi(config, undefined, axiosInstance);
     }
 
     private getToken(): string | null {

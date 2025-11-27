@@ -21,14 +21,19 @@ export const createApiConfiguration = (): Configuration => {
 
     const token = getTokenFn ? getTokenFn() : localStorage.getItem('token');
 
-    console.log('Creating API configuration with:');
-    console.log('- basePath:', basePath);
-    console.log('- token:', token ? `present (${token.substring(0, 20)}...)` : 'missing');
+    console.log('🔧 Creating API configuration:');
+    console.log('   basePath:', basePath);
+    console.log('   token exists:', !!token);
+    console.log('   token value:', token ? `${token.substring(0, 30)}...` : 'null');
 
-    return new Configuration({
+    const config = new Configuration({
         basePath,
         accessToken: token || undefined,
     });
+
+    console.log('   Configuration accessToken:', config.accessToken ? 'set' : 'not set');
+
+    return config;
 };
 
 export const updateApiConfiguration = () => {
