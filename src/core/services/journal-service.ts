@@ -9,19 +9,57 @@ import type {
 } from '../../api/generated/api';
 import { createApiConfiguration } from '../../api/api-client';
 import type { JournalRecord, GrowthStage } from '../models/product';
+import globalAxios, {type AxiosInstance} from "axios";
 
 class JournalService {
     private journalRecordApi!: JournalRecordApi;
     private growthStageApi!: GrowthStageApi;
+    private axiosInstance: AxiosInstance;
 
     constructor() {
+        this.axiosInstance = globalAxios.create();
+        this.setupInterceptors();
         this.initializeApis();
     }
 
+    private setupInterceptors() {
+        this.axiosInstance.interceptors.request.use(
+            (request) => {
+                const token = this.getToken();
+                console.log('🚀 AdminService Request:', request.url);
+
+                if (token && request.headers) {
+                    request.headers.Authorization = `Bearer ${token}`;
+                    console.log('✅ Added Authorization header to admin request');
+                }
+                return request;
+            },
+            (error) => {
+                console.error('❌ AdminService request error:', error);
+                return Promise.reject(error);
+            }
+        );
+
+        this.axiosInstance.interceptors.response.use(
+            (response) => {
+                console.log('✅ JournalService Response:', response.status, response.config.url);
+                return response;
+            },
+            (error) => {
+                console.error('❌ JournalService response error:', error.response?.status, error.config?.url);
+                return Promise.reject(error);
+            }
+        );
+    }
+
+    private getToken(): string | null {
+        return localStorage.getItem('token');
+    }
+    
     private initializeApis() {
         const config = createApiConfiguration();
-        this.journalRecordApi = new JournalRecordApi(config);
-        this.growthStageApi = new GrowthStageApi(config);
+        this.journalRecordApi = new JournalRecordApi(config, undefined, this.axiosInstance);
+        this.growthStageApi = new GrowthStageApi(config, undefined, this.axiosInstance);
     }
 
     private updateApiConfig() {

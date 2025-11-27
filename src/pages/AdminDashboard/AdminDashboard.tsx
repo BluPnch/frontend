@@ -16,14 +16,11 @@ import {
     AdminModal
 } from './components';
 
-
-import {seedService} from "../../core/services/seed-service";
-import {adminService} from "../../core/services/admin-service";
-import {authService} from "../../core/services/auth-service";
-import {plantService} from "../../core/services/plant-service";
-import {userService} from "../../core/services/user-service";
+import { seedService } from "../../core/services/seed-service";
+import { adminService } from "../../core/services/admin-service";
+import { plantService } from "../../core/services/plant-service";
+import { userService } from "../../core/services/user-service";
 import { journalService } from "../../core/services/journal-service";
-import { growthStageService } from "../../core/services/growth-stage-service";
 
 type TabType = 'clients' | 'employees' | 'administrators' | 'journal' | 'plants' | 'seeds';
 
@@ -90,11 +87,11 @@ export const AdminDashboard: React.FC = () => {
             ] = await Promise.all([
                 adminService.getClients().catch(() => []),
                 adminService.getEmployees().catch(() => []),
-                adminService.getAdministrators().catch(() => []),
+                adminService.getAllUsers().catch(() => []),
                 plantService.getPlants().catch(() => []),
                 seedService.getSeeds().catch(() => []),
                 journalService.getJournalRecords().catch(() => []),
-                growthStageService.getGrowthStages().catch(() => []),
+                journalService.getGrowthStages().catch(() => []),
             ]);
 
             setClients(clientsData);
@@ -150,56 +147,41 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
-    const deleteAdministrator = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить этого администратора?')) return;
+    const deletePlant = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить это растение?')) return;
 
         try {
-            await adminService.deleteAdministrator(id);
-            showAlertMessage('Администратор успешно удален', 'success');
+            await plantService.deletePlant(id);
+            showAlertMessage('Растение успешно удалено', 'success');
             await loadAllData();
         } catch (error) {
             showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
         }
     };
 
-    const updateAdministrator = async (id: string, data: Partial<AuthUser>) => {
+    const handleSeedSubmit = async (data: Seed) => {
         try {
-            await adminService.updateAdministrator(id, data);
-            showAlertMessage('Администратор успешно обновлен', 'success');
+            if (editingSeed && editingSeed.id) {
+                await seedService.updateSeed(editingSeed.id, data);
+                showAlertMessage('Семя успешно обновлено', 'success');
+            } else {
+                await seedService.createSeed(data);
+                showAlertMessage('Семя успешно создано', 'success');
+            }
+            setShowSeedModal(false);
+            setEditingSeed(null);
             await loadAllData();
         } catch (error) {
-            showAlertMessage('Ошибка обновления: ' + (error as Error).message, 'error');
+            showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
         }
     };
 
-    const deleteEmployee = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить этого сотрудника?')) return;
+    const deleteSeed = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить это семя?')) return;
 
         try {
-            await adminService.deleteEmployee(id);
-            showAlertMessage('Сотрудник успешно удален', 'success');
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
-        }
-    };
-
-    const updateEmployee = async (id: string, data: Partial<Employee>) => {
-        try {
-            await adminService.updateEmployee(id, data);
-            showAlertMessage('Сотрудник успешно обновлен', 'success');
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка обновления: ' + (error as Error).message, 'error');
-        }
-    };
-
-    const deleteClient = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить этого клиента?')) return;
-
-        try {
-            await adminService.deleteClient(id);
-            showAlertMessage('Клиент успешно удален', 'success');
+            await seedService.deleteSeed(id);
+            showAlertMessage('Семя успешно удалено', 'success');
             await loadAllData();
         } catch (error) {
             showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
@@ -235,72 +217,7 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
-    const changeUserRole = async (userId: string, newRole: number) => {
-        if (!confirm('Вы уверены, что хотите изменить роль пользователя?')) return;
 
-        try {
-            await adminService.updateUserRole(userId, newRole);
-            showAlertMessage('Роль пользователя успешно изменена', 'success');
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка изменения роли: ' + (error as Error).message, 'error');
-        }
-    };
-
-    const deletePlant = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить это растение?')) return;
-
-        try {
-            await plantService.deletePlant(id);
-            showAlertMessage('Растение успешно удалено', 'success');
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
-        }
-    };
-
-    // Seed functions
-    const handleSeedSubmit = async (data: Seed) => {
-        try {
-            if (editingSeed && editingSeed.id) {
-                await seedService.updateSeed(editingSeed.id, data);
-                showAlertMessage('Семя успешно обновлено', 'success');
-            } else {
-                await seedService.createSeed(data);
-                showAlertMessage('Семя успешно создано', 'success');
-            }
-            setShowSeedModal(false);
-            setEditingSeed(null);
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
-        }
-    };
-
-    const deleteSeed = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить это семя?')) return;
-
-        try {
-            await seedService.deleteSeed(id);
-            showAlertMessage('Семя успешно удалено', 'success');
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
-        }
-    };
-
-    // Journal functions (заглушки - нужно реализовать соответствующие сервисы)
-    const handleJournalSubmit = async (data: JournalRecord) => {
-        showAlertMessage('Функционал журнала будет реализован позже', 'success');
-        setShowJournalModal(false);
-        setEditingJournal(null);
-    };
-
-    const deleteJournalRecord = async (id: string) => {
-        showAlertMessage('Функционал журнала будет реализован позже', 'success');
-    };
-
-    // Admin functions
     const handleAdminSubmit = async (data: AdminCreateData) => {
         try {
             await adminService.createAdministrator(data);
@@ -312,7 +229,8 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
-    // Helper functions
+    
+
     const getClientName = (clientId: string) => {
         const client = clients.find(c => c.id === clientId);
         return client ? (client.companyName || client.id?.substring(0, 8) + '...') : '-';
@@ -379,27 +297,17 @@ export const AdminDashboard: React.FC = () => {
                         <ClientsTab
                             clients={clients}
                             onAssignAsEmployee={assignClientAsEmployee}
-                            onDeleteClient={deleteClient}
-                            onChangeRole={(clientId, newRole) => changeUserRole(clientId, newRole)}
                         />
                     )}
                     {activeTab === 'employees' && (
                         <EmployeesTab
                             employees={employees}
-                            onDeleteEmployee={deleteEmployee}
-                            onEditEmployee={(employee) => {
-                                console.log('Edit employee:', employee);
-                            }}
                         />
                     )}
                     {activeTab === 'administrators' && (
                         <AdministratorsTab
                             administrators={administrators}
                             onAddAdmin={() => setShowAdminModal(true)}
-                            onDeleteAdmin={deleteAdministrator}
-                            onEditAdmin={(admin) => {
-                                console.log('Edit admin:', admin);
-                            }}
                         />
                     )}
                     {activeTab === 'journal' && (

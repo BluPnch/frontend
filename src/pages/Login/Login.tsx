@@ -27,13 +27,12 @@ export const Login: React.FC = () => {
         setAlert(null);
 
         try {
-            const response = await userService.login({
-                username: loginData.username,
-                password: loginData.password
-            });
+            const response = await userService.login(
+                loginData.username,
+                loginData.password   
+            );
 
             showAlert('Вход выполнен успешно!', 'success');
-
             setTimeout(() => {
                 navigate('/dashboard');
             }, 100);
@@ -58,7 +57,6 @@ export const Login: React.FC = () => {
             });
 
             showAlert('Регистрация успешна! Вы автоматически вошли в систему.', 'success');
-
             setTimeout(() => {
                 navigate('/dashboard');
             }, 100);

@@ -1,18 +1,60 @@
-import type {
-    ServerControllersModelsSeedDTO,
-    ServerControllersModelsEnumsEnumViability,
-    ServerControllersModelsEnumsEnumLight
+import {
+    type ServerControllersModelsSeedDTO,
+    type ServerControllersModelsEnumsEnumViability,
+    type ServerControllersModelsEnumsEnumLight, PlantApi
 } from '../../api/generated/api';
 import { SeedApi } from '../../api/generated/api';
 import { createApiConfiguration } from '../../api/api-client';
 import type { Seed } from '../models/product';
+import globalAxios, {type AxiosInstance} from "axios";
 
 class SeedService {
     private seedApi: SeedApi;
+    private axiosInstance: AxiosInstance;
 
     constructor() {
+        this.axiosInstance = globalAxios.create();
+        this.setupInterceptors();
+        this.initializeApis();
+    }
+
+    private initializeApis() {
         const config = createApiConfiguration();
-        this.seedApi = new SeedApi(config);
+        this.seedApi = new SeedApi(config, undefined, this.axiosInstance);
+    }
+
+    private setupInterceptors() {
+        this.axiosInstance.interceptors.request.use(
+            (request) => {
+                const token = this.getToken();
+                console.log('🚀 AdminService Request:', request.url);
+
+                if (token && request.headers) {
+                    request.headers.Authorization = `Bearer ${token}`;
+                    console.log('✅ Added Authorization header to admin request');
+                }
+                return request;
+            },
+            (error) => {
+                console.error('❌ AdminService request error:', error);
+                return Promise.reject(error);
+            }
+        );
+
+        this.axiosInstance.interceptors.response.use(
+            (response) => {
+                console.log('✅ SeedService Response:', response.status, response.config.url);
+                return response;
+            },
+            (error) => {
+                console.error('❌ SeedService response error:', error.response?.status, error.config?.url);
+                return Promise.reject(error);
+            }
+        );
+    }
+
+    private getToken(): string | null {
+        return localStorage.getItem('token');
     }
 
     /**

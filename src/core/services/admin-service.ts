@@ -14,23 +14,58 @@ import type {
     ServerControllersModelsUpdateUserRoleRequestDto
 } from '../../api/generated/api';
 import { createApiConfiguration } from '../../api/api-client';
+import globalAxios, {type AxiosInstance} from "axios";
 
 class AdminService {
     private administratorApi!: AdministratorApi;
     private clientApi!: ClientApi;
     private employeeApi!: EmployeeApi;
     private userApi!: UserApi;
+    private axiosInstance: AxiosInstance;
 
     constructor() {
+        this.axiosInstance = globalAxios.create();
+        this.setupInterceptors();
         this.initializeApis();
+    }
+
+    private setupInterceptors() {
+        this.axiosInstance.interceptors.request.use(
+            (request) => {
+                const token = this.getToken();
+                console.log('🚀 AdminService Request:', request.url);
+
+                if (token && request.headers) {
+                    request.headers.Authorization = `Bearer ${token}`;
+                    console.log('✅ Added Authorization header to admin request');
+                }
+                return request;
+            },
+            (error) => {
+                console.error('❌ AdminService request error:', error);
+                return Promise.reject(error);
+            }
+        );
+
+        this.axiosInstance.interceptors.response.use(
+            (response) => {
+                console.log('✅ AdminService Response:', response.status, response.config.url);
+                return response;
+            },
+            (error) => {
+                console.error('❌ AdminService response error:', error.response?.status, error.config?.url);
+                return Promise.reject(error);
+            }
+        );
     }
 
     private initializeApis() {
         const config = createApiConfiguration();
-        this.administratorApi = new AdministratorApi(config);
-        this.clientApi = new ClientApi(config);
-        this.employeeApi = new EmployeeApi(config);
-        this.userApi = new UserApi(config);
+
+        this.administratorApi = new AdministratorApi(config, undefined, this.axiosInstance);
+        this.clientApi = new ClientApi(config, undefined, this.axiosInstance);
+        this.employeeApi = new EmployeeApi(config, undefined, this.axiosInstance);
+        this.userApi = new UserApi(config, undefined, this.axiosInstance);
     }
 
     private updateApiConfig() {
