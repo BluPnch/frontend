@@ -14,7 +14,12 @@ interface OverviewTabProps {
 export const OverviewTab: React.FC<OverviewTabProps> = ({ stats }) => {
     return (
         <div className="overview-tab">
-            <h2>Обзор системы</h2>
+            <div className="tab-header">
+                <h2>Обзор системы</h2>
+                <div className="tab-actions">
+                    <span className="total-count">Статистика</span>
+                </div>
+            </div>
 
             <div className="stats-grid">
                 <div className="stat-card">

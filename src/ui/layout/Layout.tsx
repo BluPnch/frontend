@@ -10,9 +10,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = 'Greenhouse Sy
     const { user, logout } = useAppStore();
 
     return (
-        <div className="layout">
+        <div className="layout" style={{ width: '100%' }}>
             <header className="header">
-                <div className="header-content">
+                <div className="header-content" style={{ maxWidth: '100%' }}>
                     <h1>{title}</h1>
                     <div className="user-info">
                         <span>{user?.username || 'Пользователь'}</span>
@@ -22,7 +22,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title = 'Greenhouse Sy
                     </div>
                 </div>
             </header>
-            <main className="main-content">
+            <main className="main-content" style={{ width: '100%', padding: 0 }}>
                 {children}
             </main>
         </div>

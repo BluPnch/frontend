@@ -1,4 +1,4 @@
-﻿/* ===== ПЕРЕМЕННЫЕ ===== */
+﻿﻿/* ===== ПЕРЕМЕННЫЕ ===== */
 :root {
     /* Цветовая палитра */
     --primary-color: #2e7d32;
@@ -12,6 +12,8 @@
     --gray: #666;
     --error-color: #c33;
     --success-color: #3c3;
+    --success-light: #d4edda;
+    --error-light: #f8d7da;
 
     /* Типографика */
     --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -46,6 +48,18 @@
 }
 
 /* ===== БАЗОВЫЕ СТИЛИ ===== */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+}
+
 html {
     font-size: 16px;
     scroll-behavior: smooth;
@@ -55,7 +69,7 @@ body {
     font-family: var(--font-family);
     line-height: 1.6;
     color: var(--text-color);
-    background-image: url('/background.jpg');
+    background-image: url('background.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;

@@ -1,23 +1,8 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Layout } from '../../ui/layout/Layout';
-import { userService } from '../../core/services/user-service';
-import { adminService } from '../../core/services/admin-service';
-import { plantService } from '../../core/services/plant-service';
-import { seedService } from '../../core/services/seed-service';
 import type { User, Client, Employee, AuthUser, AdminCreateData } from '../../core/models/user';
 import type { Plant, Seed, JournalRecord, GrowthStage } from '../../core/models/product';
-import {
-    flowerTypes,
-    fruitTypes,
-    reproductionTypes,
-    viabilityTypes,
-    lightRequirements,
-    conditionTypes,
-    maturityOptions,
-    waterRequirementsOptions
-} from '../../core/utils/enumMaps';
 
-// Импортируем все компоненты
 import {
     OverviewTab,
     ClientsTab,
@@ -32,10 +17,12 @@ import {
     AdminModal
 } from './components';
 
-import '../../styles/globals/common.css';
-import '../../styles/globals/tables.css';
-import '../../styles/globals/forms.css';
-import '../../styles/globals/layout.css';
+
+import {seedService} from "../../core/services/seed-service";
+import {adminService} from "../../core/services/admin-service";
+import {authService} from "../../core/services/auth-service";
+import {plantService} from "../../core/services/plant-service";
+import {userService} from "../../core/services/user-service";
 
 type TabType = 'overview' | 'clients' | 'employees' | 'administrators' | 'journal' | 'plants' | 'seeds';
 
@@ -283,19 +270,22 @@ export const AdminDashboard: React.FC = () => {
 
                 <div className="welcome-card">
                     <h2>Панель администратора</h2>
-                    <p>Добро пожаловать, {currentUser?.username || 'Администратор'}</p>
                 </div>
 
-                <div className="nav-tabs">
-                    {(['overview', 'clients', 'employees', 'administrators', 'journal', 'plants', 'seeds'] as TabType[]).map(tab => (
-                        <button
-                            key={tab}
-                            className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
-                            onClick={() => switchTab(tab)}
-                        >
-                            {getTabName(tab)}
-                        </button>
-                    ))}
+                <div className="nav">
+                    <div className="nav-content">
+                        <div className="nav-tabs">
+                            {(['overview', 'clients', 'employees', 'administrators', 'journal', 'plants', 'seeds'] as TabType[]).map(tab => (
+                                <button
+                                    key={tab}
+                                    className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
+                                    onClick={() => switchTab(tab)}
+                                >
+                                    {getTabName(tab)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="tab-content">
