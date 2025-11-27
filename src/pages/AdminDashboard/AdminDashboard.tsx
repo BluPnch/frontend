@@ -4,7 +4,6 @@ import type { User, Client, Employee, AuthUser, AdminCreateData } from '../../co
 import type { Plant, Seed, JournalRecord, GrowthStage } from '../../core/models/product';
 
 import {
-    OverviewTab,
     ClientsTab,
     EmployeesTab,
     AdministratorsTab,
@@ -24,11 +23,11 @@ import {authService} from "../../core/services/auth-service";
 import {plantService} from "../../core/services/plant-service";
 import {userService} from "../../core/services/user-service";
 
-type TabType = 'overview' | 'clients' | 'employees' | 'administrators' | 'journal' | 'plants' | 'seeds';
+type TabType = 'clients' | 'employees' | 'administrators' | 'journal' | 'plants' | 'seeds';
 
 export const AdminDashboard: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [activeTab, setActiveTab] = useState<TabType>('overview');
+    const [activeTab, setActiveTab] = useState<TabType>('clients');
     const [clients, setClients] = useState<Client[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [administrators, setAdministrators] = useState<AuthUser[]>([]);
@@ -40,7 +39,6 @@ export const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error'; show: boolean }>({ message: '', type: 'success', show: false });
 
-    // Modal states
     const [showPlantModal, setShowPlantModal] = useState(false);
     const [showSeedModal, setShowSeedModal] = useState(false);
     const [showJournalModal, setShowJournalModal] = useState(false);
@@ -260,7 +258,7 @@ export const AdminDashboard: React.FC = () => {
     }
 
     return (
-        <Layout title="Административная панель">
+        <Layout title="Панель администратора">
             <div className="container">
                 {alert.show && (
                     <div className={`alert alert-${alert.type}`}>
@@ -268,14 +266,10 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                 )}
 
-                <div className="welcome-card">
-                    <h2>Панель администратора</h2>
-                </div>
-
                 <div className="nav">
                     <div className="nav-content">
                         <div className="nav-tabs">
-                            {(['overview', 'clients', 'employees', 'administrators', 'journal', 'plants', 'seeds'] as TabType[]).map(tab => (
+                            {(['clients', 'employees', 'administrators', 'journal', 'plants', 'seeds'] as TabType[]).map(tab => (
                                 <button
                                     key={tab}
                                     className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
@@ -289,7 +283,6 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 <div className="tab-content">
-                    {activeTab === 'overview' && <OverviewTab stats={stats} />}
                     {activeTab === 'clients' && (
                         <ClientsTab
                             clients={clients}
@@ -408,7 +401,6 @@ export const AdminDashboard: React.FC = () => {
 
 const getTabName = (tab: TabType): string => {
     const names = {
-        overview: 'Обзор',
         clients: 'Клиенты',
         employees: 'Сотрудники',
         administrators: 'Администраторы',
