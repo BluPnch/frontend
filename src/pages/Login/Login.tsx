@@ -25,6 +25,7 @@ export const Login: React.FC = () => {
         setTimeout(() => setAlert(null), 5000);
     };
 
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -36,21 +37,20 @@ export const Login: React.FC = () => {
                 password: loginData.password
             };
 
-            // Используем userService для логина
             const response = await userService.login(loginRequest);
 
-            // Сохраняем токен в localStorage
             if (response.token) {
                 localStorage.setItem('token', response.token);
                 localStorage.setItem('username', response.username || '');
+
+                userService.updateApiConfig();
             }
 
             showAlert('Вход выполнен успешно!', 'success');
 
-            // После успешного логина перенаправляем на dashboard
             setTimeout(() => {
                 navigate('/dashboard');
-            }, 1000);
+            }, 100);
 
         } catch (err: any) {
             console.error('Login error:', err);
@@ -71,21 +71,20 @@ export const Login: React.FC = () => {
                 password: registerData.password
             };
 
-            // Используем userService для регистрации
             const response = await userService.register(registerRequest);
 
-            // Сохраняем токен в localStorage после регистрации
             if (response.token) {
                 localStorage.setItem('token', response.token);
                 localStorage.setItem('username', response.username || '');
+
+                userService.updateApiConfig();
             }
 
             showAlert('Регистрация успешна! Вы автоматически вошли в систему.', 'success');
 
-            // После успешной регистрации перенаправляем на dashboard
             setTimeout(() => {
                 navigate('/dashboard');
-            }, 2000);
+            }, 100);
 
         } catch (err: any) {
             console.error('Registration error:', err);

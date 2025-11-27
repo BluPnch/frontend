@@ -8,15 +8,23 @@ export const setTokenGetter = (fn: () => string | null) => {
     getTokenFn = fn;
 };
 
+
+export const getTokenFromStorage = (): string | null => {
+    return localStorage.getItem('token');
+};
+
+setTokenGetter(getTokenFromStorage);
+
+
 export const createApiConfiguration = (): Configuration => {
     console.log('Creating API configuration with basePath:', API_BASE_URL);
 
-    const token = getTokenFn ? getTokenFn() : localStorage.getItem('token');
+
+    const token = getTokenFn ? getTokenFn() : getTokenFromStorage();
     console.log('Current token:', token ? `Bearer ${token.substring(0, 20)}...` : 'missing');
 
     return new Configuration({
         basePath: API_BASE_URL,
-        apiKey: token ? `Bearer ${token}` : undefined, 
         accessToken: token || undefined,
     });
 };
