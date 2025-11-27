@@ -21,11 +21,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     login: async (username: string, password: string) => {
         try {
+            set({ loading: true });
+
             const userData = await authService.login(username, password);
+            console.log('Login successful, userData:', userData);
             
             await new Promise(resolve => setTimeout(resolve, 100));
-            
+
             const currentUser = await userService.getCurrentUser();
+            console.log('Current user retrieved:', currentUser);
 
             set({
                 user: currentUser,
@@ -33,6 +37,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
                 loading: false
             });
         } catch (error) {
+            console.error('Login failed in store:', error);
             set({
                 user: null,
                 isAuthenticated: false,

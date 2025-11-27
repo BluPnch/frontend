@@ -17,14 +17,16 @@ setTokenGetter(getTokenFromStorage);
 
 
 export const createApiConfiguration = (): Configuration => {
-    console.log('Creating API configuration with basePath:', API_BASE_URL);
+    const basePath = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5097';
 
+    const token = getTokenFn ? getTokenFn() : localStorage.getItem('token');
 
-    const token = getTokenFn ? getTokenFn() : getTokenFromStorage();
-    console.log('Current token:', token ? `Bearer ${token.substring(0, 20)}...` : 'missing');
+    console.log('Creating API configuration with:');
+    console.log('- basePath:', basePath);
+    console.log('- token:', token ? `present (${token.substring(0, 20)}...)` : 'missing');
 
     return new Configuration({
-        basePath: API_BASE_URL,
+        basePath,
         accessToken: token || undefined,
     });
 };

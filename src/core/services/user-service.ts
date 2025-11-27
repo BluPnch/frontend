@@ -1,4 +1,3 @@
-// user-service.ts
 import {
     UserApi,
     AuthApi
@@ -12,7 +11,7 @@ import type {
 } from '../../api/generated/api';
 import { createApiConfiguration } from '../../api/api-client';
 import type { AxiosError } from 'axios';
-
+import globalAxios from "axios";
 class UserService {
     private userApi!: UserApi;
     private authApi!: AuthApi;
@@ -23,8 +22,26 @@ class UserService {
 
     private initializeApis() {
         const config = createApiConfiguration();
-        this.userApi = new UserApi(config);
-        this.authApi = new AuthApi(config);
+
+        const axiosInstance = globalAxios.create();
+
+        axiosInstance.interceptors.request.use(
+            (request) => {
+                console.log('🚀 Outgoing request:', {
+                    url: request.url,
+                    method: request.method,
+                    headers: request.headers,
+                    authHeader: request.headers?.Authorization
+                });
+                return request;
+            },
+            (error) => {
+                return Promise.reject(error);
+            }
+        );
+
+        this.userApi = new UserApi(config, undefined, axiosInstance);
+        this.authApi = new AuthApi(config, undefined, axiosInstance);
     }
 
     public updateApiConfig() {
@@ -34,7 +51,6 @@ class UserService {
         this.authApi = new AuthApi(config);
     }
 
-    // Метод для получения токена
     private getToken(): string | null {
         return localStorage.getItem('token');
     }
@@ -49,14 +65,13 @@ class UserService {
             if (response.data.token) {
                 console.log('Saving token to localStorage and updating API config...');
                 localStorage.setItem('token', response.data.token);
-                this.updateApiConfig(); // Обновляем конфигурацию с новым токеном
+                this.updateApiConfig(); 
             }
 
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to login:', error);
 
-            // Типизируем ошибку для лучшего сообщения
             if (error instanceof Error) {
                 throw new Error(error.message || 'Ошибка входа');
             } else {
@@ -71,11 +86,10 @@ class UserService {
                 serverControllersModelsRegisterRequestDto: userData
             });
 
-            // Сохраняем токен после успешной регистрации
             if (response.data.token) {
                 console.log('Saving token to localStorage and updating API config...');
                 localStorage.setItem('token', response.data.token);
-                this.updateApiConfig(); // Обновляем конфигурацию с новым токеном
+                this.updateApiConfig();
             }
 
             return response.data;
@@ -93,19 +107,50 @@ class UserService {
     async getCurrentUser(): Promise<ServerControllersModelsUserDTO> {
         try {
             const token = this.getToken();
-            console.log('Getting current user with token:', token ? `present (${token.substring(0, 20)}...)` : 'missing');
+            console.log('🔐 Token details:');
+            console.log('- Full token:', token);
+            console.log('- Token length:', token?.length);
+
+            if (!token || token === 'undefined' || token === 'null') {
+                console.log('❌ Invalid token format');
+                this.logout();
+                throw new Error('Invalid token');
+            }
+
+            const tokenParts = token.split('.');
+            if (tokenParts.length !== 3) {
+                console.log('❌ Invalid JWT structure');
+                this.logout();
+                throw new Error('Invalid JWT structure');
+            }
+
+            try {
+                const payload = JSON.parse(atob(tokenParts[1]));
+                console.log('📋 Token payload:', payload);
+                console.log('⏰ Token expiration:', new Date(payload.exp * 1000));
+
+                if (payload.exp && Date.now() >= payload.exp * 1000) {
+                    console.log('❌ Token expired');
+                    this.logout();
+                    throw new Error('Token expired');
+                }
+            } catch (e) {
+                console.log('❌ Cannot decode token payload');
+                this.logout();
+                throw new Error('Invalid token payload');
+            }
 
             const response = await this.userApi.apiV1UsersMeGet();
-            console.log('Current user response:', response.data);
+            console.log('✅ Current user response:', response.data);
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to get current user:', error);
 
-            // Проверяем, является ли ошибка AxiosError и имеет статус 401
             if (this.isAxiosError(error) && error.response?.status === 401) {
                 console.log('Token is invalid, logging out...');
                 this.logout();
             }
+
 
             if (error instanceof Error) {
                 throw new Error(error.message || 'Ошибка получения данных пользователя');
@@ -130,7 +175,6 @@ class UserService {
         }
     }
 
-    // Вспомогательный метод для проверки типа ошибки
     private isAxiosError(error: unknown): error is AxiosError {
         return (error as AxiosError).isAxiosError !== undefined;
     }
