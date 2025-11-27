@@ -52,8 +52,8 @@ class SeedService {
             const seedDTO: ServerControllersModelsSeedDTO = {
                 plantId: seedData.plantId,
                 maturity: seedData.maturity || null,
-                viability: seedData.viability as ServerControllersModelsEnumsEnumViability,
-                lightRequirements: seedData.lightRequirements as ServerControllersModelsEnumsEnumLight,
+                viability: this.numberToViabilityEnum(seedData.viability || 0),
+                lightRequirements: this.numberToLightEnum(seedData.lightRequirements || 0),
                 waterRequirements: seedData.waterRequirements || null,
                 temperatureRequirements: seedData.temperatureRequirements
             };
@@ -67,6 +67,7 @@ class SeedService {
             throw new Error('Не удалось создать семя');
         }
     }
+
 
     /**
      * Обновить семя
@@ -158,11 +159,10 @@ class SeedService {
             id: seedDTO.id || '',
             plantId: seedDTO.plantId || '',
             maturity: seedDTO.maturity || '',
-            viability: seedDTO.viability as number,
-            lightRequirements: seedDTO.lightRequirements as number,
+            viability: this.viabilityEnumToNumber(seedDTO.viability),
+            lightRequirements: this.lightEnumToNumber(seedDTO.lightRequirements),
             waterRequirements: seedDTO.waterRequirements || '',
             temperatureRequirements: seedDTO.temperatureRequirements || 0,
-            // Дополнительные поля, которые могут быть в модели Seed
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
@@ -179,6 +179,30 @@ class SeedService {
             6: 'Неизвестно'
         };
         return viabilityMap[viability] || viability.toString();
+    }
+
+    private numberToViabilityEnum(value: number): ServerControllersModelsEnumsEnumViability {
+        const validValues = [0, 1, 2, 3, 4, 5, 6];
+        if (validValues.includes(value)) {
+            return value as ServerControllersModelsEnumsEnumViability;
+        }
+        return 0;
+    }
+
+    private numberToLightEnum(value: number): ServerControllersModelsEnumsEnumLight {
+        const validValues = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        if (validValues.includes(value)) {
+            return value as ServerControllersModelsEnumsEnumLight;
+        }
+        return 0;
+    }
+
+    private viabilityEnumToNumber(value: ServerControllersModelsEnumsEnumViability | undefined): number {
+        return value !== undefined ? value : 0;
+    }
+
+    private lightEnumToNumber(value: ServerControllersModelsEnumsEnumLight | undefined): number {
+        return value !== undefined ? value : 0;
     }
 
     /**

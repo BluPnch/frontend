@@ -6,7 +6,7 @@ import { AdminDashboard } from '../pages/AdminDashboard/AdminDashboard';
 import { EmployeeDashboard } from '../pages/EmployeeDashboard/EmployeeDashboard';
 import { ClientDashboard } from '../pages/ClientDashboard/ClientDashboard';
 import { ProtectedRoute } from './ProtectedRoute';
-import { authService } from '../core/services/auth-service';
+import { userService } from '../core/services/user-service';
 
 export const AppRouter: React.FC = () => {
     return (
@@ -15,7 +15,7 @@ export const AppRouter: React.FC = () => {
                 <Route
                     path="/login"
                     element={
-                        authService.isAuthenticated() ?
+                        userService.isAuthenticated() ?
                             <Navigate to="/dashboard" replace /> :
                             <Login />
                     }

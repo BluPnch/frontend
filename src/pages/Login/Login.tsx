@@ -1,10 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../../core/services/user-service';
-import type {
-    ServerControllersModelsLoginRequestDto,
-    ServerControllersModelsRegisterRequestDto
-} from '../../api/generated/api';
 
 import '../../styles/globals/auth.css';
 import '../../styles/globals/common.css';
@@ -25,26 +21,16 @@ export const Login: React.FC = () => {
         setTimeout(() => setAlert(null), 5000);
     };
 
-
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setAlert(null);
 
         try {
-            const loginRequest: ServerControllersModelsLoginRequestDto = {
+            const response = await userService.login({
                 username: loginData.username,
                 password: loginData.password
-            };
-
-            const response = await userService.login(loginRequest);
-
-            if (response.token) {
-                localStorage.setItem('token', response.token);
-                localStorage.setItem('username', response.username || '');
-
-                userService.updateApiConfig();
-            }
+            });
 
             showAlert('Вход выполнен успешно!', 'success');
 
@@ -66,19 +52,10 @@ export const Login: React.FC = () => {
         setAlert(null);
 
         try {
-            const registerRequest: ServerControllersModelsRegisterRequestDto = {
+            const response = await userService.register({
                 email: registerData.email,
                 password: registerData.password
-            };
-
-            const response = await userService.register(registerRequest);
-
-            if (response.token) {
-                localStorage.setItem('token', response.token);
-                localStorage.setItem('username', response.username || '');
-
-                userService.updateApiConfig();
-            }
+            });
 
             showAlert('Регистрация успешна! Вы автоматически вошли в систему.', 'success');
 

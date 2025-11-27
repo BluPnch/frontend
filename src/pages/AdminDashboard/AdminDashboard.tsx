@@ -22,6 +22,8 @@ import {adminService} from "../../core/services/admin-service";
 import {authService} from "../../core/services/auth-service";
 import {plantService} from "../../core/services/plant-service";
 import {userService} from "../../core/services/user-service";
+import { journalService } from "../../core/services/journal-service";
+import { growthStageService } from "../../core/services/growth-stage-service";
 
 type TabType = 'clients' | 'employees' | 'administrators' | 'journal' | 'plants' | 'seeds';
 
@@ -83,18 +85,16 @@ export const AdminDashboard: React.FC = () => {
                 adminsData,
                 plantsData,
                 seedsData,
-                // journalData,
-                // growthStagesData,
-                // statsData
+                journalData,
+                growthStagesData,
             ] = await Promise.all([
                 adminService.getClients().catch(() => []),
                 adminService.getEmployees().catch(() => []),
                 adminService.getAdministrators().catch(() => []),
                 plantService.getPlants().catch(() => []),
                 seedService.getSeeds().catch(() => []),
-                // PlantService.getJournalRecords().catch(() => []),
-                // PlantService.getGrowthStages().catch(() => []),
-                // PlantService.getStats().catch(() => ({ plantsCount: 0, clientsCount: 0, employeesCount: 0, journalCount: 0 }))
+                journalService.getJournalRecords().catch(() => []),
+                growthStageService.getGrowthStages().catch(() => []),
             ]);
 
             setClients(clientsData);
@@ -102,16 +102,14 @@ export const AdminDashboard: React.FC = () => {
             setAdministrators(adminsData);
             setPlants(plantsData);
             setSeeds(seedsData);
-            // setJournalRecords(journalData);
-            // setGrowthStages(growthStagesData);
-            // setStats(statsData);
+            setJournalRecords(journalData);
+            setGrowthStages(growthStagesData);
 
-            // Временные данные для демонстрации
             setStats({
                 plantsCount: plantsData.length,
                 clientsCount: clientsData.length,
                 employeesCount: employeesData.length,
-                journalCount: 0 // journalData.length
+                journalCount: journalData.length
             });
         } catch (error) {
             console.error('Failed to load data:', error);
@@ -123,12 +121,10 @@ export const AdminDashboard: React.FC = () => {
         setActiveTab(tab);
     };
 
-    // Client functions
     const assignClientAsEmployee = async (clientId: string) => {
         if (!confirm('Вы уверены, что хотите назначить этого клиента сотрудником?')) return;
 
         try {
-            // 1 = Employee role (предполагая, что это значение соответствует EnumAuth.Employee)
             await adminService.updateUserRole(clientId, 1);
             showAlertMessage('Клиент успешно назначен сотрудником', 'success');
             await loadAllData();
@@ -137,7 +133,6 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
-    // Plant functions
     const handlePlantSubmit = async (data: Plant) => {
         try {
             if (editingPlant && editingPlant.id) {
@@ -152,6 +147,103 @@ export const AdminDashboard: React.FC = () => {
             await loadAllData();
         } catch (error) {
             showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const deleteAdministrator = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этого администратора?')) return;
+
+        try {
+            await adminService.deleteAdministrator(id);
+            showAlertMessage('Администратор успешно удален', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const updateAdministrator = async (id: string, data: Partial<AuthUser>) => {
+        try {
+            await adminService.updateAdministrator(id, data);
+            showAlertMessage('Администратор успешно обновлен', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка обновления: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const deleteEmployee = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этого сотрудника?')) return;
+
+        try {
+            await adminService.deleteEmployee(id);
+            showAlertMessage('Сотрудник успешно удален', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const updateEmployee = async (id: string, data: Partial<Employee>) => {
+        try {
+            await adminService.updateEmployee(id, data);
+            showAlertMessage('Сотрудник успешно обновлен', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка обновления: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const deleteClient = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить этого клиента?')) return;
+
+        try {
+            await adminService.deleteClient(id);
+            showAlertMessage('Клиент успешно удален', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const handleJournalSubmit = async (data: JournalRecord) => {
+        try {
+            if (editingJournal && editingJournal.id) {
+                await journalService.updateJournalRecord(editingJournal.id, data);
+                showAlertMessage('Запись журнала успешно обновлена', 'success');
+            } else {
+                await journalService.createJournalRecord(data);
+                showAlertMessage('Запись журнала успешно создана', 'success');
+            }
+            setShowJournalModal(false);
+            setEditingJournal(null);
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const deleteJournalRecord = async (id: string) => {
+        if (!confirm('Вы уверены, что хотите удалить эту запись журнала?')) return;
+
+        try {
+            await journalService.deleteJournalRecord(id);
+            showAlertMessage('Запись журнала успешно удалена', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const changeUserRole = async (userId: string, newRole: number) => {
+        if (!confirm('Вы уверены, что хотите изменить роль пользователя?')) return;
+
+        try {
+            await adminService.updateUserRole(userId, newRole);
+            showAlertMessage('Роль пользователя успешно изменена', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка изменения роли: ' + (error as Error).message, 'error');
         }
     };
 
@@ -287,13 +379,27 @@ export const AdminDashboard: React.FC = () => {
                         <ClientsTab
                             clients={clients}
                             onAssignAsEmployee={assignClientAsEmployee}
+                            onDeleteClient={deleteClient}
+                            onChangeRole={(clientId, newRole) => changeUserRole(clientId, newRole)}
                         />
                     )}
-                    {activeTab === 'employees' && <EmployeesTab employees={employees} />}
+                    {activeTab === 'employees' && (
+                        <EmployeesTab
+                            employees={employees}
+                            onDeleteEmployee={deleteEmployee}
+                            onEditEmployee={(employee) => {
+                                console.log('Edit employee:', employee);
+                            }}
+                        />
+                    )}
                     {activeTab === 'administrators' && (
                         <AdministratorsTab
                             administrators={administrators}
                             onAddAdmin={() => setShowAdminModal(true)}
+                            onDeleteAdmin={deleteAdministrator}
+                            onEditAdmin={(admin) => {
+                                console.log('Edit admin:', admin);
+                            }}
                         />
                     )}
                     {activeTab === 'journal' && (

@@ -1,6 +1,5 @@
 // core/stores/app-store.ts
 import { create } from 'zustand';
-import { authService } from '../services/auth-service';
 import { userService } from '../services/user-service';
 
 interface AppStore {
@@ -23,7 +22,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         try {
             set({ loading: true });
 
-            const userData = await authService.login(username, password);
+            const userData = await userService.login(username, password);
             console.log('Login successful, userData:', userData);
             
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -49,7 +48,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     register: async (email: string, password: string) => {
         try {
-            const userData = await authService.register(email, password);
+            const userData = await userService.register(email, password);
             const currentUser = await userService.getCurrentUser();
 
             set({
@@ -68,7 +67,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     },
 
     logout: () => {
-        authService.logout();
+        userService.logout();
         set({
             user: null,
             isAuthenticated: false,
@@ -78,7 +77,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     checkAuth: async () => {
         try {
-            if (authService.isAuthenticated()) {
+            if (userService.isAuthenticated()) {
                 const currentUser = await userService.getCurrentUser();
                 set({
                     user: currentUser,

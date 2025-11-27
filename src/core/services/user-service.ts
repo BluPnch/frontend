@@ -12,6 +12,8 @@ import type {
 import { createApiConfiguration } from '../../api/api-client';
 import type { AxiosError } from 'axios';
 import globalAxios from "axios";
+
+
 class UserService {
     private userApi!: UserApi;
     private authApi!: AuthApi;
@@ -126,21 +128,25 @@ class UserService {
         this.authApi = new AuthApi(config, undefined, axiosInstance);
     }
 
-    private getToken(): string | null {
+    public getToken(): string | null {
         return localStorage.getItem('token');
     }
 
-    async login(credentials: ServerControllersModelsLoginRequestDto): Promise<ServerControllersModelsLoginResponseDto> {
+    async login(username: string, password: string): Promise<ServerControllersModelsLoginResponseDto> {
         try {
+            const credentials: ServerControllersModelsLoginRequestDto = {
+                username,
+                password
+            };
+
             const response = await this.authApi.apiV1AuthLoginPost({
                 serverControllersModelsLoginRequestDto: credentials
             });
 
-            // Сохраняем токен после успешного логина
             if (response.data.token) {
                 console.log('Saving token to localStorage and updating API config...');
                 localStorage.setItem('token', response.data.token);
-                this.updateApiConfig(); 
+                this.updateApiConfig();
             }
 
             return response.data;

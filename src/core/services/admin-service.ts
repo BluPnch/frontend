@@ -1,7 +1,8 @@
 import {
     AdministratorApi,
     ClientApi,
-    EmployeeApi
+    EmployeeApi,
+    UserApi
 } from '../../api/generated/api';
 import type {
     ServerControllersModelsClientDTO,
@@ -9,7 +10,8 @@ import type {
     ServerControllersModelsAdministratorDTO,
     ServerControllersModelsCreateAdministratorRequestDto,
     ServerControllersModelsAuthUserDTO,
-    DomainModelsEnumsEnumAuth
+    DomainModelsEnumsEnumAuth,
+    ServerControllersModelsUpdateUserRoleRequestDto
 } from '../../api/generated/api';
 import { createApiConfiguration } from '../../api/api-client';
 
@@ -17,6 +19,7 @@ class AdminService {
     private administratorApi!: AdministratorApi;
     private clientApi!: ClientApi;
     private employeeApi!: EmployeeApi;
+    private userApi!: UserApi;
 
     constructor() {
         this.initializeApis();
@@ -27,6 +30,7 @@ class AdminService {
         this.administratorApi = new AdministratorApi(config);
         this.clientApi = new ClientApi(config);
         this.employeeApi = new EmployeeApi(config);
+        this.userApi = new UserApi(config);
     }
 
     private updateApiConfig() {
@@ -34,12 +38,14 @@ class AdminService {
         this.administratorApi = new AdministratorApi(config);
         this.clientApi = new ClientApi(config);
         this.employeeApi = new EmployeeApi(config);
+        this.userApi = new UserApi(config);
     }
 
     private getToken(): string | null {
         return localStorage.getItem('token');
     }
 
+    // Администраторы
     async getAdministrators(surname?: string, name?: string, patronymic?: string, phoneNumber?: string): Promise<ServerControllersModelsAdministratorDTO[]> {
         try {
             const response = await this.administratorApi.apiV1AdministratorsGet({
@@ -51,12 +57,7 @@ class AdminService {
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to get administrators:', error);
-
-            if (error instanceof Error) {
-                throw new Error(error.message || 'Ошибка получения списка администраторов');
-            } else {
-                throw new Error('Неизвестная ошибка при получении списка администраторов');
-            }
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения списка администраторов');
         }
     }
 
@@ -66,12 +67,7 @@ class AdminService {
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to get administrator:', error);
-
-            if (error instanceof Error) {
-                throw new Error(error.message || 'Ошибка получения данных администратора');
-            } else {
-                throw new Error('Неизвестная ошибка при получении данных администратора');
-            }
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения данных администратора');
         }
     }
 
@@ -83,15 +79,11 @@ class AdminService {
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to create administrator:', error);
-
-            if (error instanceof Error) {
-                throw new Error(error.message || 'Ошибка создания администратора');
-            } else {
-                throw new Error('Неизвестная ошибка при создании администратора');
-            }
+            throw new Error(error instanceof Error ? error.message : 'Ошибка создания администратора');
         }
     }
 
+    // Клиенты
     async getClients(companyName?: string, phoneNumber?: string): Promise<ServerControllersModelsClientDTO[]> {
         try {
             const response = await this.clientApi.apiV1ClientsGet({
@@ -101,12 +93,7 @@ class AdminService {
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to get clients:', error);
-
-            if (error instanceof Error) {
-                throw new Error(error.message || 'Ошибка получения списка клиентов');
-            } else {
-                throw new Error('Неизвестная ошибка при получении списка клиентов');
-            }
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения списка клиентов');
         }
     }
 
@@ -116,33 +103,26 @@ class AdminService {
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to get client:', error);
-
-            if (error instanceof Error) {
-                throw new Error(error.message || 'Ошибка получения данных клиента');
-            } else {
-                throw new Error('Неизвестная ошибка при получении данных клиента');
-            }
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения данных клиента');
         }
     }
 
     async updateUserRole(clientId: string, newRole: DomainModelsEnumsEnumAuth): Promise<ServerControllersModelsAuthUserDTO> {
         try {
+            const updateData: ServerControllersModelsUpdateUserRoleRequestDto = { newRole };
+
             const response = await this.clientApi.apiV1ClientsClientIdRolePatch({
                 clientId,
-                serverControllersModelsUpdateUserRoleRequestDto: { newRole }
+                serverControllersModelsUpdateUserRoleRequestDto: updateData
             });
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to update user role:', error);
-
-            if (error instanceof Error) {
-                throw new Error(error.message || 'Ошибка обновления роли пользователя');
-            } else {
-                throw new Error('Неизвестная ошибка при обновлении роли пользователя');
-            }
+            throw new Error(error instanceof Error ? error.message : 'Ошибка обновления роли пользователя');
         }
     }
 
+    // Сотрудники
     async getEmployees(phoneNumber?: string, task?: string, plantDomain?: string): Promise<ServerControllersModelsEmployeeDTO[]> {
         try {
             const response = await this.employeeApi.apiV1EmployeesGet({
@@ -153,12 +133,7 @@ class AdminService {
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to get employees:', error);
-
-            if (error instanceof Error) {
-                throw new Error(error.message || 'Ошибка получения списка сотрудников');
-            } else {
-                throw new Error('Неизвестная ошибка при получении списка сотрудников');
-            }
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения списка сотрудников');
         }
     }
 
@@ -168,12 +143,64 @@ class AdminService {
             return response.data;
         } catch (error: unknown) {
             console.error('Failed to get employee:', error);
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения данных сотрудника');
+        }
+    }
 
-            if (error instanceof Error) {
-                throw new Error(error.message || 'Ошибка получения данных сотрудника');
-            } else {
-                throw new Error('Неизвестная ошибка при получении данных сотрудника');
-            }
+    // Новые методы для работы с растениями сотрудников
+    async getEmployeePlants(employeeId?: string): Promise<any[]> {
+        try {
+            const response = await this.employeeApi.apiV1EmployeesPlantsGet({
+                employeeId
+            });
+            return response.data;
+        } catch (error: unknown) {
+            console.error('Failed to get employee plants:', error);
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения растений сотрудника');
+        }
+    }
+
+    // Новые методы для работы с журналом клиентов
+    async getClientJournalRecords(): Promise<any[]> {
+        try {
+            const response = await this.clientApi.apiV1ClientsJournalRecordsGet();
+            return response.data;
+        } catch (error: unknown) {
+            console.error('Failed to get client journal records:', error);
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения записей журнала клиента');
+        }
+    }
+
+    async getClientPlants(): Promise<any[]> {
+        try {
+            const response = await this.clientApi.apiV1ClientsPlantsGet();
+            return response.data;
+        } catch (error: unknown) {
+            console.error('Failed to get client plants:', error);
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения растений клиента');
+        }
+    }
+
+    // Методы для работы со всеми пользователями
+    async getAllUsers(): Promise<ServerControllersModelsAuthUserDTO[]> {
+        try {
+            const response = await this.userApi.apiV1UsersGet();
+            return response.data;
+        } catch (error: unknown) {
+            console.error('Failed to get all users:', error);
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения списка пользователей');
+        }
+    }
+
+    // Удаление пользователей (если нужно)
+    async deleteUser(userId: string): Promise<void> {
+        try {
+            // Этот метод может потребовать дополнительной реализации на бэкенде
+            // В текущем API нет прямого метода удаления пользователя
+            throw new Error('Метод удаления пользователя не реализован');
+        } catch (error: unknown) {
+            console.error('Failed to delete user:', error);
+            throw new Error(error instanceof Error ? error.message : 'Ошибка удаления пользователя');
         }
     }
 }
