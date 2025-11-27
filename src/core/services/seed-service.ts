@@ -100,6 +100,8 @@ class SeedService {
                 temperatureRequirements: seedData.temperatureRequirements
             };
 
+            console.log('Creating seed with data:', seedDTO);
+
             const response = await this.seedApi.apiV1SeedsPost({
                 serverControllersModelsSeedDTO: seedDTO
             });

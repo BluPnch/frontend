@@ -160,6 +160,8 @@ export const AdminDashboard: React.FC = () => {
     };
 
     const handleSeedSubmit = async (data: Seed) => {
+        console.log('Submitting seed data:', data);
+        
         try {
             if (editingSeed && editingSeed.id) {
                 await seedService.updateSeed(editingSeed.id, data);
@@ -172,6 +174,7 @@ export const AdminDashboard: React.FC = () => {
             setEditingSeed(null);
             await loadAllData();
         } catch (error) {
+            console.error('Seed submission error:', error);
             showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
         }
     };

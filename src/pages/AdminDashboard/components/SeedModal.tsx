@@ -27,8 +27,25 @@ export const SeedModal: React.FC<SeedModalProps> = ({ seed, plants, onClose, onS
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.plantId && formData.maturity) {
+
+        if (formData.plantId &&
+            formData.maturity &&
+            formData.viability !== undefined &&
+            formData.lightRequirements !== undefined &&
+            formData.waterRequirements &&
+            formData.temperatureRequirements !== undefined) {
+
             onSubmit(formData as Seed);
+        } else {
+            alert('Заполните все обязательные поля');
+            console.log('Missing fields:', {
+                plantId: formData.plantId,
+                maturity: formData.maturity,
+                viability: formData.viability,
+                lightRequirements: formData.lightRequirements,
+                waterRequirements: formData.waterRequirements,
+                temperatureRequirements: formData.temperatureRequirements
+            });
         }
     };
 
