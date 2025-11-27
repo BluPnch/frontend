@@ -38,67 +38,60 @@ export const PlantsTab: React.FC<PlantsTabProps> = ({
     return (
         <div className="plants-tab">
             <div className="tab-header">
-                <h2>Растения</h2>
-                <div className="tab-actions">
-                    <button className="btn btn-primary" onClick={onAddPlant}>
-                        Добавить растение
-                    </button>
-                    <span className="total-count">Всего: {plants.length}</span>
-                </div>
-            </div>
 
-            {plants.length === 0 ? (
-                <div className="empty-state">
-                    <p>Растения не найдены</p>
-                    <button className="btn btn-primary" onClick={onAddPlant}>
-                        Добавить первое растение
-                    </button>
-                </div>
-            ) : (
-                <div className="table-container">
-                    <table className="data-table">
-                        <thead>
-                        <tr>
-                            <th>Вид</th>
-                            <th>Семейство</th>
-                            <th>Цветок</th>
-                            <th>Плод</th>
-                            <th>Размножение</th>
-                            <th>Клиент</th>
-                            <th>Действия</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {plants.map(plant => (
-                            <tr key={plant.id}>
-                                <td>{plant.specie || '-'}</td>
-                                <td>{plant.family || '-'}</td>
-                                <td>{getFlowerName(plant.flower)}</td>
-                                <td>{getFruitName(plant.fruit)}</td>
-                                <td>{getReproductionName(plant.reproduction)}</td>
-                                <td>{getClientName(plant.clientId)}</td>
-                                <td>
-                                    <div className="action-buttons">
-                                        <button
-                                            className="btn btn-secondary btn-sm"
-                                            onClick={() => onEditPlant(plant)}
-                                        >
-                                            Редактировать
-                                        </button>
-                                        <button
-                                            className="btn btn-danger btn-sm"
-                                            onClick={() => onDeletePlant(plant.id!)}
-                                        >
-                                            Удалить
-                                        </button>
-                                    </div>
-                                </td>
+                {plants.length === 0 ? (
+                    <div className="empty-state">
+                        <p>Растения не найдены</p>
+                        <button className="btn btn-primary" onClick={onAddPlant}>
+                            Добавить первое растение
+                        </button>
+                    </div>
+                ) : (
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead>
+                            <tr>
+                                <th>Вид</th>
+                                <th>Семейство</th>
+                                <th>Цветок</th>
+                                <th>Плод</th>
+                                <th>Размножение</th>
+                                <th>Клиент</th>
+                                <th>Действия</th>
                             </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                            </thead>
+                            <tbody>
+                            {plants.map(plant => (
+                                <tr key={plant.id}>
+                                    <td>{plant.specie || '-'}</td>
+                                    <td>{plant.family || '-'}</td>
+                                    <td>{getFlowerName(plant.flower)}</td>
+                                    <td>{getFruitName(plant.fruit)}</td>
+                                    <td>{getReproductionName(plant.reproduction)}</td>
+                                    <td>{getClientName(plant.clientId)}</td>
+                                    <td>
+                                        <div className="action-buttons">
+                                            <button
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={() => onEditPlant(plant)}
+                                            >
+                                                Редактировать
+                                            </button>
+                                            <button
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() => onDeletePlant(plant.id!)}
+                                            >
+                                                Удалить
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

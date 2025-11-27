@@ -1,5 +1,4 @@
-﻿export { OverviewTab } from './OverviewTab';
-export { ClientsTab } from './ClientsTab';
+﻿export { ClientsTab } from './ClientsTab';
 export { EmployeesTab } from './EmployeesTab';
 export { AdministratorsTab } from './AdministratorsTab';
 export { JournalTab } from './JournalTab';
