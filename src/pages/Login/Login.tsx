@@ -1,6 +1,10 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../core/services/auth-service';
+import { userService } from '../../core/services/user-service';
+import type {
+    ServerControllersModelsLoginRequestDto,
+    ServerControllersModelsRegisterRequestDto
+} from '../../api/generated/api';
 
 import '../../styles/globals/auth.css';
 import '../../styles/globals/common.css';
@@ -27,11 +31,27 @@ export const Login: React.FC = () => {
         setAlert(null);
 
         try {
-            // Используем authService для логина
-            await authService.login(loginData.username, loginData.password);
+            const loginRequest: ServerControllersModelsLoginRequestDto = {
+                username: loginData.username,
+                password: loginData.password
+            };
+
+            // Используем userService для логина
+            const response = await userService.login(loginRequest);
+
+            // Сохраняем токен в localStorage
+            if (response.token) {
+                localStorage.setItem('token', response.token);
+                localStorage.setItem('username', response.username || '');
+            }
+
+            showAlert('Вход выполнен успешно!', 'success');
 
             // После успешного логина перенаправляем на dashboard
-            navigate('/dashboard');
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 1000);
+
         } catch (err: any) {
             console.error('Login error:', err);
             showAlert(err.message || 'Ошибка входа. Проверьте ваши учетные данные.', 'error');
@@ -46,23 +66,44 @@ export const Login: React.FC = () => {
         setAlert(null);
 
         try {
-            // Используем authService для регистрации
-            await authService.register(registerData.email, registerData.password);
+            const registerRequest: ServerControllersModelsRegisterRequestDto = {
+                email: registerData.email,
+                password: registerData.password
+            };
 
-            showAlert('Регистрация успешна! Теперь вы можете войти.', 'success');
+            // Используем userService для регистрации
+            const response = await userService.register(registerRequest);
 
-            // Переключаем на вкладку логина и подставляем email
+            // Сохраняем токен в localStorage после регистрации
+            if (response.token) {
+                localStorage.setItem('token', response.token);
+                localStorage.setItem('username', response.username || '');
+            }
+
+            showAlert('Регистрация успешна! Вы автоматически вошли в систему.', 'success');
+
+            // После успешной регистрации перенаправляем на dashboard
             setTimeout(() => {
-                setActiveTab('login');
-                setLoginData(prev => ({ ...prev, username: registerData.email }));
-                setRegisterData({ email: '', password: '' }); // Очищаем форму регистрации
+                navigate('/dashboard');
             }, 2000);
+
         } catch (err: any) {
             console.error('Registration error:', err);
             showAlert(err.message || 'Ошибка регистрации. Попробуйте другой email.', 'error');
         } finally {
             setLoading(false);
         }
+    };
+
+    const clearForm = () => {
+        setLoginData({ username: '', password: '' });
+        setRegisterData({ email: '', password: '' });
+        setAlert(null);
+    };
+
+    const handleTabChange = (tab: 'login' | 'register') => {
+        setActiveTab(tab);
+        clearForm();
     };
 
     return (
@@ -75,15 +116,17 @@ export const Login: React.FC = () => {
             <div className="tabs">
                 <button
                     className={`tab ${activeTab === 'login' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('login')}
+                    onClick={() => handleTabChange('login')}
                     type="button"
+                    disabled={loading}
                 >
                     Вход
                 </button>
                 <button
                     className={`tab ${activeTab === 'register' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('register')}
+                    onClick={() => handleTabChange('register')}
                     type="button"
+                    disabled={loading}
                 >
                     Регистрация
                 </button>
@@ -106,6 +149,8 @@ export const Login: React.FC = () => {
                                 onChange={(e) => setLoginData(prev => ({ ...prev, username: e.target.value }))}
                                 required
                                 disabled={loading}
+                                placeholder="Введите имя пользователя"
+                                autoComplete="username"
                             />
                         </div>
                         <div className="form-group">
@@ -117,12 +162,14 @@ export const Login: React.FC = () => {
                                 onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                                 required
                                 disabled={loading}
+                                placeholder="Введите пароль"
+                                autoComplete="current-password"
                             />
                         </div>
                         <button
                             type="submit"
                             className="auth-btn"
-                            disabled={loading}
+                            disabled={loading || !loginData.username || !loginData.password}
                         >
                             {loading ? 'Вход...' : 'Войти'}
                         </button>
@@ -147,6 +194,8 @@ export const Login: React.FC = () => {
                                 onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
                                 required
                                 disabled={loading}
+                                placeholder="Введите email"
+                                autoComplete="email"
                             />
                         </div>
                         <div className="form-group">
@@ -158,12 +207,15 @@ export const Login: React.FC = () => {
                                 onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
                                 required
                                 disabled={loading}
+                                placeholder="Введите пароль"
+                                autoComplete="new-password"
+                                minLength={6}
                             />
                         </div>
                         <button
                             type="submit"
                             className="auth-btn"
-                            disabled={loading}
+                            disabled={loading || !registerData.email || !registerData.password}
                         >
                             {loading ? 'Регистрация...' : 'Зарегистрироваться'}
                         </button>

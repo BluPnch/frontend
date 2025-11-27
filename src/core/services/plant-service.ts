@@ -1,7 +1,5 @@
-﻿import {
-    PlantApi,
-    ServerControllersModelsPlantDTO
-} from '../../api/generated/api';
+﻿import type { ServerControllersModelsPlantDTO } from '../../api/generated/api';
+import { PlantApi } from '../../api/generated/api';
 
 class PlantService {
     private plantApi: PlantApi;

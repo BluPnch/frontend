@@ -1,44 +1,63 @@
-import { UserApi } from '../../api/generated/api';
+import {
+    UserApi,
+    AuthApi
+} from '../../api/generated/api';
+import type {
+    ServerControllersModelsUserDTO,
+    ServerControllersModelsAuthUserDTO,
+    ServerControllersModelsLoginRequestDto,
+    ServerControllersModelsRegisterRequestDto,
+    ServerControllersModelsLoginResponseDto
+} from '../../api/generated/api';
 import { createApiConfiguration } from '../../api/api-client';
 
 class UserService {
-    private getBaseUrl(): string {
-        return 'http://localhost:5097';
-    }
+    private userApi: UserApi;
+    private authApi: AuthApi;
 
-    private createUserApi(): UserApi {
+    constructor() {
         const config = createApiConfiguration();
-        return new UserApi(config);
+        this.userApi = new UserApi(config);
+        this.authApi = new AuthApi(config);
     }
 
-    async getCurrentUser() {
+    async login(credentials: ServerControllersModelsLoginRequestDto): Promise<ServerControllersModelsLoginResponseDto> {
         try {
-            console.log('Fetching current user...');
-            const token = localStorage.getItem('token');
-            console.log('Token exists:', !!token);
-
-            // Создаем новый экземпляр API для каждого запроса
-            const userApi = this.createUserApi();
-            const response = await userApi.apiV1UsersMeGet();
-
-            console.log('Current user response:', response);
+            const response = await this.authApi.apiV1AuthLoginPost({
+                serverControllersModelsLoginRequestDto: credentials
+            });
             return response.data;
-        } catch (error: any) {
-            console.error('Failed to get current user:', error);
-
-            if (error.response) {
-                console.error('Response status:', error.response.status);
-                console.error('Response data:', error.response.data);
-            }
-
+        } catch (error) {
+            console.error('Failed to login:', error);
             throw error;
         }
     }
 
-    async getAllUsers() {
-        const userApi = this.createUserApi();
+    async register(userData: ServerControllersModelsRegisterRequestDto): Promise<ServerControllersModelsLoginResponseDto> {
         try {
-            const response = await userApi.apiV1UsersGet();
+            const response = await this.authApi.apiV1AuthRegisterPost({
+                serverControllersModelsRegisterRequestDto: userData
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Failed to register:', error);
+            throw error;
+        }
+    }
+
+    async getCurrentUser(): Promise<ServerControllersModelsUserDTO> {
+        try {
+            const response = await this.userApi.apiV1UsersMeGet();
+            return response.data;
+        } catch (error) {
+            console.error('Failed to get current user:', error);
+            throw error;
+        }
+    }
+
+    async getAllUsers(): Promise<ServerControllersModelsAuthUserDTO[]> {
+        try {
+            const response = await this.userApi.apiV1UsersGet();
             return response.data;
         } catch (error) {
             console.error('Failed to get users:', error);
