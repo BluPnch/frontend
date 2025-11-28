@@ -95,6 +95,8 @@ class JournalService {
 
     async createJournalRecord(data: JournalRecord): Promise<JournalRecord> {
         try {
+            console.log('🎯 Creating journal record:', data);
+            
             const journalRecordDTO: ServerControllersModelsJournalRecordDTO = {
                 plantId: data.plantId,
                 growthStageId: data.growthStageId,
@@ -105,9 +107,13 @@ class JournalService {
                 date: data.date
             };
 
+            console.log('📤 Sending DTO:', journalRecordDTO);
+
             const response = await this.journalRecordApi.apiV1JournalRecordsPost({
                 serverControllersModelsJournalRecordDTO: journalRecordDTO
             });
+
+            console.log('✅ Journal record created:', response.data);
             return this.mapJournalRecordDTOToJournalRecord(response.data);
         } catch (error) {
             console.error('Failed to create journal record:', error);

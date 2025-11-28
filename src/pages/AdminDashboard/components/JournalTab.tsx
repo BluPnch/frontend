@@ -36,11 +36,17 @@ export const JournalTab: React.FC<JournalTabProps> = ({
         return conditionTypes[condition as keyof typeof conditionTypes] || 'Неизвестно';
     };
 
+    const handleAddRecord = () => {
+        console.log('🟢 JournalTab: Кнопка "Добавить запись" нажата');
+        console.log('🟢 JournalTab: Вызываю onAddRecord');
+        onAddRecord();
+    };
+    
     return (
         <div className="journal-tab">
             <div className="tab-header">
                 <div className="tab-actions">
-                    <button className="btn btn-primary" onClick={onAddRecord}>
+                    <button className="btn btn-primary" onClick={handleAddRecord}>
                         Добавить запись
                     </button>
                 </div>

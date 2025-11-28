@@ -47,6 +47,8 @@ export const AdminDashboard: React.FC = () => {
     const [editingJournal, setEditingJournal] = useState<JournalRecord | null>(null);
 
     useEffect(() => {
+        console.log('🟡 AdminDashboard: showJournalModal =', showJournalModal);
+        console.log('🟡 AdminDashboard: editingJournal =', editingJournal);
         init();
     }, []);
 
@@ -160,7 +162,7 @@ export const AdminDashboard: React.FC = () => {
     };
 
     const handleSeedSubmit = async (data: Seed) => {
-        console.log('Submitting seed data:', data);
+        // console.log('Submitting seed data:', data);
         
         try {
             if (editingSeed && editingSeed.id) {
@@ -193,6 +195,8 @@ export const AdminDashboard: React.FC = () => {
 
     const handleJournalSubmit = async (data: JournalRecord) => {
         try {
+            // console.log('📝 Handling journal submit:', data);
+            
             if (editingJournal && editingJournal.id) {
                 await journalService.updateJournalRecord(editingJournal.id, data);
                 showAlertMessage('Запись журнала успешно обновлена', 'success');
@@ -204,6 +208,7 @@ export const AdminDashboard: React.FC = () => {
             setEditingJournal(null);
             await loadAllData();
         } catch (error) {
+            console.error('❌ Journal submit error:', error);
             showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
         }
     };
@@ -321,10 +326,13 @@ export const AdminDashboard: React.FC = () => {
                             growthStages={growthStages}
                             clients={clients}
                             onAddRecord={() => {
+                                console.log('🟢 AdminDashboard: onAddRecord вызван');
+                                console.log('🟢 AdminDashboard: Устанавливаю editingJournal = null, showJournalModal = true');
                                 setEditingJournal(null);
                                 setShowJournalModal(true);
                             }}
                             onEditRecord={(record) => {
+                                console.log('🟢 AdminDashboard: onEditRecord вызван', record);
                                 setEditingJournal(record);
                                 setShowJournalModal(true);
                             }}
@@ -393,15 +401,20 @@ export const AdminDashboard: React.FC = () => {
 
                 {showJournalModal && (
                     <JournalModal
+                        show={showJournalModal}
                         record={editingJournal}
                         plants={plants}
                         employees={employees}
                         growthStages={growthStages}
                         onClose={() => {
+                            console.log('🔴 AdminDashboard: JournalModal onClose вызван');
                             setShowJournalModal(false);
                             setEditingJournal(null);
                         }}
-                        onSubmit={handleJournalSubmit}
+                        onSubmit={(data) => {
+                            console.log('🟢 AdminDashboard: JournalModal onSubmit вызван с данными:', data);
+                            handleJournalSubmit(data);
+                        }}
                     />
                 )}
 

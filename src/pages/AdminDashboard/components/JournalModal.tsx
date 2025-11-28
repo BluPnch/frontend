@@ -4,6 +4,7 @@ import type { Employee } from '../../../core/models/user';
 import { conditionTypes } from '../../../core/utils/enumMaps';
 
 interface JournalModalProps {
+    show: boolean;
     record?: JournalRecord | null;
     plants: Plant[];
     employees: Employee[];
@@ -13,6 +14,7 @@ interface JournalModalProps {
 }
 
 export const JournalModal: React.FC<JournalModalProps> = ({
+                                                              show,
                                                               record,
                                                               plants,
                                                               employees,
@@ -31,34 +33,109 @@ export const JournalModal: React.FC<JournalModalProps> = ({
     });
 
     useEffect(() => {
+        console.log('🟡 JournalModal: Монтирование/обновление компонента');
+        console.log('🟡 JournalModal: show пропс:', show);
+        console.log('🟡 JournalModal: record пропс:', record);
+        console.log('🟡 JournalModal: Текущий formData:', formData);
+
+
+        console.log('🟡 JournalModal: Доступные растения:', plants.length, plants);
+        console.log('🟡 JournalModal: Доступные сотрудники:', employees.length, employees);
+        console.log('🟡 JournalModal: Доступные стадии роста:', growthStages.length, growthStages);
+
         if (record) {
             setFormData({
                 ...record,
                 date: record.date.split('T')[0]
             });
+        } else {
+            setFormData({
+                plantId: '',
+                growthStageId: '',
+                employeeId: '',
+                plantHeight: 0,
+                fruitCount: 0,
+                condition: 0,
+                date: new Date().toISOString().split('T')[0]
+            });
         }
-    }, [record]);
+    }, [record, show]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('🟢 JournalModal: Форма отправлена!!!');
+        console.log('🟢 JournalModal: Данные формы:', formData);
+        console.log('🟢 JournalModal: Проверка обязательных полей:');
+        console.log('  - plantId:', formData.plantId, formData.plantId ? '✅' : '❌');
+        console.log('  - employeeId:', formData.employeeId, formData.employeeId ? '✅' : '❌');
+        console.log('  - growthStageId:', formData.growthStageId, formData.growthStageId ? '✅' : '❌');
+
         if (formData.plantId && formData.employeeId && formData.growthStageId) {
-            onSubmit(formData as JournalRecord);
+            console.log('✅ JournalModal: Все обязательные поля заполнены, вызываю onSubmit');
+            const submitData: JournalRecord = {
+                id: record?.id || '',
+                plantId: formData.plantId,
+                growthStageId: formData.growthStageId,
+                employeeId: formData.employeeId,
+                plantHeight: formData.plantHeight || 0,
+                fruitCount: formData.fruitCount || 0,
+                condition: formData.condition || 0,
+                date: formData.date || new Date().toISOString()
+            };
+            console.log('📤 JournalModal: Отправляемые данные:', submitData);
+            onSubmit(submitData);
+        } else {
+            console.error('❌ JournalModal: Не все обязательные поля заполнены!');
+            console.error('❌ plantId:', formData.plantId);
+            console.error('❌ employeeId:', formData.employeeId);
+            console.error('❌ growthStageId:', formData.growthStageId);
+            alert('Пожалуйста, заполните все обязательные поля (отмечены *)');
         }
     };
 
     const handleChange = (field: keyof JournalRecord, value: any) => {
+        console.log(`🟡 JournalModal: Изменение поля ${field}:`, value);
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal">
+        <div className={`modal ${show ? 'show' : ''}`}>
+            <div className="modal-content">
                 <div className="modal-header">
-                    <h3>{record ? 'Редактировать запись' : 'Добавить запись в журнал'}</h3>
-                    <button className="modal-close" onClick={onClose}>×</button>
+                    <h2>{record ? 'Редактировать запись' : 'Добавить запись в журнал'}</h2>
+                    <button className="close" onClick={onClose}>×</button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="modal-form">
+                {/* Тестовые данные кнопка */}
+                <div style={{padding: '10px', background: '#f0f0f0', marginBottom: '10px', textAlign: 'center'}}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            console.log('🟡 TEST: Заполняю форму тестовыми данными');
+                            setFormData({
+                                plantId: plants[0]?.id || '',
+                                growthStageId: growthStages[0]?.id || '',
+                                employeeId: employees[0]?.id || '',
+                                plantHeight: 10,
+                                fruitCount: 5,
+                                condition: 5,
+                                date: new Date().toISOString().split('T')[0]
+                            });
+                        }}
+                        style={{
+                            background: 'orange',
+                            color: 'white',
+                            padding: '8px 16px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        🧪 ЗАПОЛНИТЬ ТЕСТОВЫМИ ДАННЫМИ
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="form">
                     <div className="form-group">
                         <label>Дата *</label>
                         <input
@@ -157,7 +234,7 @@ export const JournalModal: React.FC<JournalModalProps> = ({
                         </select>
                     </div>
 
-                    <div className="modal-actions">
+                    <div className="form-actions">
                         <button type="button" className="btn btn-secondary" onClick={onClose}>
                             Отмена
                         </button>
