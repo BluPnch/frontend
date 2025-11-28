@@ -34,8 +34,6 @@ export const AdminDashboard: React.FC = () => {
     const [seeds, setSeeds] = useState<Seed[]>([]);
     const [journalRecords, setJournalRecords] = useState<JournalRecord[]>([]);
     const [growthStages, setGrowthStages] = useState<GrowthStage[]>([]);
-    const [stats, setStats] = useState({ plantsCount: 0, clientsCount: 0, employeesCount: 0, journalCount: 0 });
-    const [loading, setLoading] = useState(true);
     const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error'; show: boolean }>({ message: '', type: 'success', show: false });
 
     const [showPlantModal, setShowPlantModal] = useState(false);
@@ -71,8 +69,6 @@ export const AdminDashboard: React.FC = () => {
             if (error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
                 window.location.href = '/login';
             }
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -103,13 +99,6 @@ export const AdminDashboard: React.FC = () => {
             setSeeds(seedsData);
             setJournalRecords(journalData);
             setGrowthStages(growthStagesData);
-
-            setStats({
-                plantsCount: plantsData.length,
-                clientsCount: clientsData.length,
-                employeesCount: employeesData.length,
-                journalCount: journalData.length
-            });
         } catch (error) {
             console.error('Failed to load data:', error);
             showAlertMessage('Ошибка загрузки данных', 'error');
@@ -266,16 +255,6 @@ export const AdminDashboard: React.FC = () => {
         const stage = growthStages.find(s => s.id === growthStageId);
         return stage ? (stage.name || stage.id?.substring(0, 8) + '...') : '-';
     };
-
-    if (loading) {
-        return (
-            <Layout title="Административная панель">
-                <div className="container">
-                    <div className="loading">Загрузка...</div>
-                </div>
-            </Layout>
-        );
-    }
 
     return (
         <Layout title="Панель администратора">
