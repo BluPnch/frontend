@@ -195,20 +195,22 @@ export const AdminDashboard: React.FC = () => {
 
     const handleJournalSubmit = async (data: JournalRecord) => {
         try {
-            // console.log('📝 Handling journal submit:', data);
-            
+            console.log('📝 AdminDashboard: Получены данные из модалки:', data);
+
             if (editingJournal && editingJournal.id) {
                 await journalService.updateJournalRecord(editingJournal.id, data);
                 showAlertMessage('Запись журнала успешно обновлена', 'success');
             } else {
-                await journalService.createJournalRecord(data);
+                const result = await journalService.createJournalRecord(data);
+                console.log('✅ AdminDashboard: Запись создана, ответ сервера:', result);
                 showAlertMessage('Запись журнала успешно создана', 'success');
             }
+
             setShowJournalModal(false);
             setEditingJournal(null);
             await loadAllData();
         } catch (error) {
-            console.error('❌ Journal submit error:', error);
+            console.error('❌ AdminDashboard: Journal submit error:', error);
             showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
         }
     };

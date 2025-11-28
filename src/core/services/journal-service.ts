@@ -11,7 +11,7 @@ import { createApiConfiguration } from '../../api/api-client';
 import type { JournalRecord, GrowthStage } from '../models/product';
 import globalAxios, {type AxiosInstance} from "axios";
 
-class JournalService {
+export class JournalService {
     private journalRecordApi!: JournalRecordApi;
     private growthStageApi!: GrowthStageApi;
     private axiosInstance: AxiosInstance;
@@ -26,16 +26,16 @@ class JournalService {
         this.axiosInstance.interceptors.request.use(
             (request) => {
                 const token = this.getToken();
-                console.log('🚀 AdminService Request:', request.url);
+                console.log('🚀 JournalService Request:', request.url);
 
                 if (token && request.headers) {
                     request.headers.Authorization = `Bearer ${token}`;
-                    console.log('✅ Added Authorization header to admin request');
+                    console.log('✅ Added Authorization header to journal request');
                 }
                 return request;
             },
             (error) => {
-                console.error('❌ AdminService request error:', error);
+                console.error('❌ JournalService request error:', error);
                 return Promise.reject(error);
             }
         );
@@ -55,17 +55,11 @@ class JournalService {
     private getToken(): string | null {
         return localStorage.getItem('token');
     }
-    
+
     private initializeApis() {
         const config = createApiConfiguration();
         this.journalRecordApi = new JournalRecordApi(config, undefined, this.axiosInstance);
         this.growthStageApi = new GrowthStageApi(config, undefined, this.axiosInstance);
-    }
-
-    private updateApiConfig() {
-        const config = createApiConfiguration();
-        this.journalRecordApi = new JournalRecordApi(config);
-        this.growthStageApi = new GrowthStageApi(config);
     }
 
     // Методы для работы с записями журнала
@@ -95,9 +89,10 @@ class JournalService {
 
     async createJournalRecord(data: JournalRecord): Promise<JournalRecord> {
         try {
-            console.log('🎯 Creating journal record:', data);
-            
-            const journalRecordDTO: ServerControllersModelsJournalRecordDTO = {
+            console.log('📤 JournalService: Отправка данных на сервер:', data);
+
+            // Преобразуем данные в формат DTO
+            const requestData: ServerControllersModelsJournalRecordDTO = {
                 plantId: data.plantId,
                 growthStageId: data.growthStageId,
                 employeeId: data.employeeId,
@@ -107,40 +102,46 @@ class JournalService {
                 date: data.date
             };
 
-            console.log('📤 Sending DTO:', journalRecordDTO);
+            console.log('📤 JournalService: Преобразованные данные (DTO):', requestData);
 
+            // Используем правильный метод API
             const response = await this.journalRecordApi.apiV1JournalRecordsPost({
-                serverControllersModelsJournalRecordDTO: journalRecordDTO
+                serverControllersModelsJournalRecordDTO: requestData
             });
 
-            console.log('✅ Journal record created:', response.data);
+            console.log('✅ JournalService: Запись успешно создана:', response.data);
+
+            // Преобразуем ответ обратно в JournalRecord
             return this.mapJournalRecordDTOToJournalRecord(response.data);
         } catch (error) {
-            console.error('Failed to create journal record:', error);
+            console.error('❌ JournalService: Ошибка создания записи:', error);
             throw new Error('Не удалось создать запись журнала');
         }
     }
 
     async updateJournalRecord(id: string, data: JournalRecord): Promise<void> {
         try {
-            const journalRecordDTO: ServerControllersModelsJournalRecordDTO = {
-                id,
+            console.log('📤 JournalService: Обновление записи:', { id, data });
+
+            const requestData: ServerControllersModelsJournalRecordDTO = {
                 plantId: data.plantId,
                 growthStageId: data.growthStageId,
                 employeeId: data.employeeId,
                 plantHeight: data.plantHeight,
                 fruitCount: data.fruitCount,
-                condition: data.condition as ServerControllersModelsEnumsEnumCondition,
+                condition: this.numberToConditionEnum(data.condition),
                 date: data.date
             };
 
             await this.journalRecordApi.apiV1JournalRecordsIdPut({
-                id,
-                serverControllersModelsJournalRecordDTO: journalRecordDTO
+                id: id,
+                serverControllersModelsJournalRecordDTO: requestData
             });
-        } catch (error: unknown) {
-            console.error('Failed to update journal record:', error);
-            throw new Error(error instanceof Error ? error.message : 'Ошибка обновления записи журнала');
+
+            console.log('✅ JournalService: Запись успешно обновлена');
+        } catch (error) {
+            console.error('❌ JournalService: Ошибка обновления записи:', error);
+            throw new Error('Не удалось обновить запись журнала');
         }
     }
 
@@ -174,7 +175,7 @@ class JournalService {
         }
     }
 
-    
+
     private mapJournalRecordDTOsToJournalRecords(dtos: ServerControllersModelsJournalRecordDTO[]): JournalRecord[] {
         return dtos.map(dto => this.mapJournalRecordDTOToJournalRecord(dto));
     }
@@ -215,7 +216,7 @@ class JournalService {
     private conditionEnumToNumber(value: ServerControllersModelsEnumsEnumCondition | undefined): number {
         return value !== undefined ? value : 0;
     }
-    
+
     async getJournalRecordsByPlant(plantId: string): Promise<JournalRecord[]> {
         return this.getJournalRecords(plantId);
     }

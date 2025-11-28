@@ -34,19 +34,15 @@ export const JournalModal: React.FC<JournalModalProps> = ({
 
     useEffect(() => {
         console.log('🟡 JournalModal: Монтирование/обновление компонента');
-        console.log('🟡 JournalModal: show пропс:', show);
-        console.log('🟡 JournalModal: record пропс:', record);
-        console.log('🟡 JournalModal: Текущий formData:', formData);
-
-
-        console.log('🟡 JournalModal: Доступные растения:', plants.length, plants);
-        console.log('🟡 JournalModal: Доступные сотрудники:', employees.length, employees);
-        console.log('🟡 JournalModal: Доступные стадии роста:', growthStages.length, growthStages);
 
         if (record) {
+            const recordDate = record.date.includes('T')
+                ? record.date.split('T')[0]
+                : record.date;
+
             setFormData({
                 ...record,
-                date: record.date.split('T')[0]
+                date: recordDate
             });
         } else {
             setFormData({
@@ -64,33 +60,28 @@ export const JournalModal: React.FC<JournalModalProps> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log('🟢 JournalModal: Форма отправлена!!!');
-        console.log('🟢 JournalModal: Данные формы:', formData);
-        console.log('🟢 JournalModal: Проверка обязательных полей:');
-        console.log('  - plantId:', formData.plantId, formData.plantId ? '✅' : '❌');
-        console.log('  - employeeId:', formData.employeeId, formData.employeeId ? '✅' : '❌');
-        console.log('  - growthStageId:', formData.growthStageId, formData.growthStageId ? '✅' : '❌');
 
-        if (formData.plantId && formData.employeeId && formData.growthStageId) {
-            console.log('✅ JournalModal: Все обязательные поля заполнены, вызываю onSubmit');
-            const submitData: JournalRecord = {
-                id: record?.id || '',
-                plantId: formData.plantId,
-                growthStageId: formData.growthStageId,
-                employeeId: formData.employeeId,
-                plantHeight: formData.plantHeight || 0,
-                fruitCount: formData.fruitCount || 0,
-                condition: formData.condition || 0,
-                date: formData.date || new Date().toISOString()
-            };
-            console.log('📤 JournalModal: Отправляемые данные:', submitData);
-            onSubmit(submitData);
-        } else {
+        if (!formData.plantId || !formData.employeeId || !formData.growthStageId || !formData.date) {
             console.error('❌ JournalModal: Не все обязательные поля заполнены!');
-            console.error('❌ plantId:', formData.plantId);
-            console.error('❌ employeeId:', formData.employeeId);
-            console.error('❌ growthStageId:', formData.growthStageId);
             alert('Пожалуйста, заполните все обязательные поля (отмечены *)');
+            return;
         }
+
+        console.log('✅ JournalModal: Все обязательные поля заполнены, вызываю onSubmit');
+
+        const submitData: JournalRecord = {
+            id: record?.id || '',
+            plantId: formData.plantId,
+            growthStageId: formData.growthStageId,
+            employeeId: formData.employeeId,
+            plantHeight: formData.plantHeight || 0,
+            fruitCount: formData.fruitCount || 0,
+            condition: formData.condition || 0,
+            date: formData.date ? `${formData.date}T00:00:00.000Z` : new Date().toISOString()
+        };
+
+        console.log('📤 JournalModal: Отправляемые данные:', submitData);
+        onSubmit(submitData);
     };
 
     const handleChange = (field: keyof JournalRecord, value: any) => {
