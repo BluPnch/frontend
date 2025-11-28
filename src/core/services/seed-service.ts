@@ -1,7 +1,7 @@
 import {
     type ServerControllersModelsSeedDTO,
     type ServerControllersModelsEnumsEnumViability,
-    type ServerControllersModelsEnumsEnumLight, PlantApi
+    type ServerControllersModelsEnumsEnumLight
 } from '../../api/generated/api';
 import { SeedApi } from '../../api/generated/api';
 import { createApiConfiguration } from '../../api/api-client';
@@ -9,7 +9,7 @@ import type { Seed } from '../models/product';
 import globalAxios, {type AxiosInstance} from "axios";
 
 class SeedService {
-    private seedApi: SeedApi;
+    private seedApi!: SeedApi;
     private axiosInstance: AxiosInstance;
 
     constructor() {
@@ -18,25 +18,20 @@ class SeedService {
         this.initializeApis();
     }
 
-    private initializeApis() {
-        const config = createApiConfiguration();
-        this.seedApi = new SeedApi(config, undefined, this.axiosInstance);
-    }
-
     private setupInterceptors() {
         this.axiosInstance.interceptors.request.use(
             (request) => {
                 const token = this.getToken();
-                console.log('🚀 AdminService Request:', request.url);
+                console.log('🚀 SeedService Request:', request.url);
 
                 if (token && request.headers) {
                     request.headers.Authorization = `Bearer ${token}`;
-                    console.log('✅ Added Authorization header to admin request');
+                    console.log('✅ Added Authorization header to seed request');
                 }
                 return request;
             },
             (error) => {
-                console.error('❌ AdminService request error:', error);
+                console.error('❌ SeedService request error:', error);
                 return Promise.reject(error);
             }
         );
@@ -57,172 +52,100 @@ class SeedService {
         return localStorage.getItem('token');
     }
 
-    /**
-     * Получить все семена с возможностью фильтрации
-     */
+    private initializeApis() {
+        const config = createApiConfiguration();
+        this.seedApi = new SeedApi(config, undefined, this.axiosInstance);
+    }
+
     async getSeeds(maturity?: string, viability?: string): Promise<Seed[]> {
         try {
+            console.log('🟡 SeedService: Получение списка семян');
             const response = await this.seedApi.apiV1SeedsGet({
                 maturity,
                 viability
             });
+            console.log('✅ SeedService: Семена успешно получены:', response.data.length);
             return this.mapSeedDTOsToSeeds(response.data);
         } catch (error) {
-            console.error('Failed to get seeds:', error);
+            console.error('❌ SeedService: Ошибка получения семян:', error);
             throw new Error('Не удалось загрузить список семян');
         }
     }
 
-    /**
-     * Получить семя по ID
-     */
     async getSeedById(id: string): Promise<Seed> {
         try {
+            console.log('🟡 SeedService: Получение семени по ID:', id);
             const response = await this.seedApi.apiV1SeedsIdGet({ id });
+            console.log('✅ SeedService: Семя успешно получено');
             return this.mapSeedDTOToSeed(response.data);
         } catch (error) {
-            console.error('Failed to get seed:', error);
+            console.error('❌ SeedService: Ошибка получения семени:', error);
             throw new Error('Не удалось загрузить информацию о семени');
         }
     }
 
-    /**
-     * Создать новое семя
-     */
-    async createSeed(seedData: Partial<Seed>): Promise<Seed> {
+    async createSeed(seedData: Seed): Promise<Seed> {
         try {
+            console.log('📤 SeedService: Создание семени:', seedData);
+
             const seedDTO: ServerControllersModelsSeedDTO = {
                 plantId: seedData.plantId,
                 maturity: seedData.maturity || null,
                 viability: this.numberToViabilityEnum(seedData.viability || 0),
                 lightRequirements: this.numberToLightEnum(seedData.lightRequirements || 0),
                 waterRequirements: seedData.waterRequirements || null,
-                temperatureRequirements: seedData.temperatureRequirements
+                temperatureRequirements: seedData.temperatureRequirements || 0
             };
 
-            console.log('Creating seed with data:', seedDTO);
+            console.log('📤 SeedService: Преобразованные данные (DTO):', seedDTO);
 
             const response = await this.seedApi.apiV1SeedsPost({
                 serverControllersModelsSeedDTO: seedDTO
             });
+
+            console.log('✅ SeedService: Семя успешно создано:', response.data);
             return this.mapSeedDTOToSeed(response.data);
         } catch (error) {
-            console.error('Failed to create seed:', error);
+            console.error('❌ SeedService: Ошибка создания семени:', error);
             throw new Error('Не удалось создать семя');
         }
     }
 
-
-    /**
-     * Обновить семя
-     */
-    async updateSeed(id: string, seedData: Partial<Seed>): Promise<void> {
+    async updateSeed(id: string, seedData: Seed): Promise<void> {
         try {
+            console.log('📤 SeedService: Обновление семени:', { id, seedData });
+
             const seedDTO: ServerControllersModelsSeedDTO = {
                 id,
                 plantId: seedData.plantId,
                 maturity: seedData.maturity || null,
-                viability: seedData.viability as ServerControllersModelsEnumsEnumViability,
-                lightRequirements: seedData.lightRequirements as ServerControllersModelsEnumsEnumLight,
+                viability: this.numberToViabilityEnum(seedData.viability || 0),
+                lightRequirements: this.numberToLightEnum(seedData.lightRequirements || 0),
                 waterRequirements: seedData.waterRequirements || null,
-                temperatureRequirements: seedData.temperatureRequirements
+                temperatureRequirements: seedData.temperatureRequirements || 0
             };
 
             await this.seedApi.apiV1SeedsIdPut({
-                id,
+                id: id,
                 serverControllersModelsSeedDTO: seedDTO
             });
+
+            console.log('✅ SeedService: Семя успешно обновлено');
         } catch (error) {
-            console.error('Failed to update seed:', error);
+            console.error('❌ SeedService: Ошибка обновления семени:', error);
             throw new Error('Не удалось обновить семя');
         }
     }
 
-    /**
-     * Удалить семя
-     */
     async deleteSeed(id: string): Promise<void> {
         try {
+            console.log('🟡 SeedService: Удаление семени:', id);
             await this.seedApi.apiV1SeedsIdDelete({ id });
+            console.log('✅ SeedService: Семя успешно удалено');
         } catch (error) {
-            console.error('Failed to delete seed:', error);
+            console.error('❌ SeedService: Ошибка удаления семени:', error);
             throw new Error('Не удалось удалить семя');
         }
-    }
-
-    /**
-     * Получить семена по ID растения
-     */
-    async getSeedsByPlantId(plantId: string): Promise<Seed[]> {
-        try {
-            const allSeeds = await this.getSeeds();
-            return allSeeds.filter(seed => seed.plantId === plantId);
-        } catch (error) {
-            console.error('Failed to get seeds by plant ID:', error);
-            throw new Error('Не удалось загрузить семена растения');
-        }
-    }
-
-    /**
-     * Получить семена по жизнеспособности
-     */
-    async getSeedsByViability(viability: ServerControllersModelsEnumsEnumViability): Promise<Seed[]> {
-        try {
-            const viabilityString = this.viabilityEnumToString(viability);
-            const response = await this.seedApi.apiV1SeedsGet({
-                viability: viabilityString
-            });
-            return this.mapSeedDTOsToSeeds(response.data);
-        } catch (error) {
-            console.error('Failed to get seeds by viability:', error);
-            throw new Error('Не удалось загрузить семена по жизнеспособности');
-        }
-    }
-
-    /**
-     * Получить семена по требованиям к освещению
-     */
-    async getSeedsByLightRequirements(lightRequirements: ServerControllersModelsEnumsEnumLight): Promise<Seed[]> {
-        try {
-            const allSeeds = await this.getSeeds();
-            return allSeeds.filter(seed => seed.lightRequirements === lightRequirements);
-        } catch (error) {
-            console.error('Failed to get seeds by light requirements:', error);
-            throw new Error('Не удалось загрузить семена по требованиям к освещению');
-        }
-    }
-
-    // Вспомогательные методы для преобразования данных
-
-    private mapSeedDTOsToSeeds(seedDTOs: ServerControllersModelsSeedDTO[]): Seed[] {
-        return seedDTOs.map(dto => this.mapSeedDTOToSeed(dto));
-    }
-
-    private mapSeedDTOToSeed(seedDTO: ServerControllersModelsSeedDTO): Seed {
-        return {
-            id: seedDTO.id || '',
-            plantId: seedDTO.plantId || '',
-            maturity: seedDTO.maturity || '',
-            viability: this.viabilityEnumToNumber(seedDTO.viability),
-            lightRequirements: this.lightEnumToNumber(seedDTO.lightRequirements),
-            waterRequirements: seedDTO.waterRequirements || '',
-            temperatureRequirements: seedDTO.temperatureRequirements || 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-    }
-
-    private viabilityEnumToString(viability: ServerControllersModelsEnumsEnumViability): string {
-        const viabilityMap: Record<ServerControllersModelsEnumsEnumViability, string> = {
-            0: 'Очень низкая',
-            1: 'Низкая',
-            2: 'Средняя',
-            3: 'Высокая',
-            4: 'Очень высокая',
-            5: 'Отличная',
-            6: 'Неизвестно'
-        };
-        return viabilityMap[viability] || viability.toString();
     }
 
     private numberToViabilityEnum(value: number): ServerControllersModelsEnumsEnumViability {
@@ -249,38 +172,32 @@ class SeedService {
         return value !== undefined ? value : 0;
     }
 
-    /**
-     * Получить статистику по семенам
-     */
-    async getSeedStats(): Promise<{
-        total: number;
-        byViability: Record<string, number>;
-        byLightRequirements: Record<string, number>;
-    }> {
+    private mapSeedDTOsToSeeds(seedDTOs: ServerControllersModelsSeedDTO[]): Seed[] {
+        return seedDTOs.map(dto => this.mapSeedDTOToSeed(dto));
+    }
+
+    private mapSeedDTOToSeed(seedDTO: ServerControllersModelsSeedDTO): Seed {
+        return {
+            id: seedDTO.id || '',
+            plantId: seedDTO.plantId || '',
+            maturity: seedDTO.maturity || '',
+            viability: this.viabilityEnumToNumber(seedDTO.viability),
+            lightRequirements: this.lightEnumToNumber(seedDTO.lightRequirements),
+            waterRequirements: seedDTO.waterRequirements || '',
+            temperatureRequirements: seedDTO.temperatureRequirements || 0
+        };
+    }
+
+    async getSeedsByPlantId(plantId: string): Promise<Seed[]> {
         try {
-            const seeds = await this.getSeeds();
-
-            const byViability: Record<string, number> = {};
-            const byLightRequirements: Record<string, number> = {};
-
-            seeds.forEach(seed => {
-                // Статистика по жизнеспособности
-                const viabilityKey = this.viabilityEnumToString(seed.viability as ServerControllersModelsEnumsEnumViability);
-                byViability[viabilityKey] = (byViability[viabilityKey] || 0) + 1;
-
-                // Статистика по требованиям к освещению
-                const lightKey = `Требования к свету: ${seed.lightRequirements}`;
-                byLightRequirements[lightKey] = (byLightRequirements[lightKey] || 0) + 1;
-            });
-
-            return {
-                total: seeds.length,
-                byViability,
-                byLightRequirements
-            };
+            console.log('🟡 SeedService: Получение семян по ID растения:', plantId);
+            const allSeeds = await this.getSeeds();
+            const filteredSeeds = allSeeds.filter(seed => seed.plantId === plantId);
+            console.log('✅ SeedService: Найдено семян:', filteredSeeds.length);
+            return filteredSeeds;
         } catch (error) {
-            console.error('Failed to get seed stats:', error);
-            throw new Error('Не удалось загрузить статистику семян');
+            console.error('❌ SeedService: Ошибка получения семян по растению:', error);
+            throw new Error('Не удалось загрузить семена растения');
         }
     }
 }

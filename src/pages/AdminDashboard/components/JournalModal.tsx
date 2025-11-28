@@ -97,7 +97,6 @@ export const JournalModal: React.FC<JournalModalProps> = ({
                     <button className="close" onClick={onClose}>×</button>
                 </div>
 
-                {/* Тестовые данные кнопка */}
                 <div style={{padding: '10px', background: '#f0f0f0', marginBottom: '10px', textAlign: 'center'}}>
                     <button
                         type="button"

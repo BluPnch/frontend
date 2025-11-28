@@ -4,13 +4,19 @@ import type { Client } from '../../../core/models/user';
 import { flowerTypes, fruitTypes, reproductionTypes } from '../../../core/utils/enumMaps';
 
 interface PlantModalProps {
+    show: boolean;
     plant?: Plant | null;
     clients: Client[];
     onClose: () => void;
     onSubmit: (data: Plant) => void;
 }
 
-export const PlantModal: React.FC<PlantModalProps> = ({ plant, clients, onClose, onSubmit }) => {
+export const PlantModal: React.FC<PlantModalProps> = ({
+                                                          show,
+                                                          plant, 
+                                                          clients, 
+                                                          onClose, 
+                                                          onSubmit }) => {
     const [formData, setFormData] = useState<Partial<Plant>>({
         clientId: '',
         specie: '',
@@ -21,10 +27,12 @@ export const PlantModal: React.FC<PlantModalProps> = ({ plant, clients, onClose,
     });
 
     useEffect(() => {
+        console.log('🟡 JournalModal: Монтирование/обновление компонента');
+        
         if (plant) {
             setFormData(plant);
         }
-    }, [plant]);
+    }, [plant, show]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,14 +46,41 @@ export const PlantModal: React.FC<PlantModalProps> = ({ plant, clients, onClose,
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal">
+        <div className={`modal ${show ? 'show' : ''}`}>
+            <div className="modal-content">
                 <div className="modal-header">
                     <h3>{plant ? 'Редактировать растение' : 'Добавить растение'}</h3>
-                    <button className="modal-close" onClick={onClose}>×</button>
+                    <button className="close" onClick={onClose}>×</button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="modal-form">
+                <div style={{padding: '10px', background: '#f0f0f0', marginBottom: '10px', textAlign: 'center'}}>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            console.log('🟡 TEST: Заполняю форму растения тестовыми данными');
+                            setFormData({
+                                family: 'Rosaceae',
+                                specie: 'Rosa rubiginosa',
+                                clientId: clients[0]?.id || '',
+                                flower: 1,
+                                fruit: 2,
+                                reproduction: 3
+                            });
+                        }}
+                        style={{
+                            background: 'orange',
+                            color: 'white',
+                            padding: '8px 16px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        🧪 ЗАПОЛНИТЬ ТЕСТОВЫМИ ДАННЫМИ
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="form">
                     <div className="form-group">
                         <label>Клиент *</label>
                         <select

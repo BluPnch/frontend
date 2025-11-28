@@ -379,6 +379,7 @@ export const AdminDashboard: React.FC = () => {
 
                 {showPlantModal && (
                     <PlantModal
+                        show={showPlantModal}
                         plant={editingPlant}
                         clients={clients}
                         onClose={() => {
@@ -391,6 +392,7 @@ export const AdminDashboard: React.FC = () => {
 
                 {showSeedModal && (
                     <SeedModal
+                        show={showSeedModal}
                         seed={editingSeed}
                         plants={plants}
                         onClose={() => {

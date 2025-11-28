@@ -2,14 +2,15 @@
     type ServerControllersModelsPlantDTO,
     type ServerControllersModelsEnumsEnumFlowers,
     type ServerControllersModelsEnumsEnumFruit,
-    type ServerControllersModelsEnumsEnumReproduction} from '../../api/generated/api';
+    type ServerControllersModelsEnumsEnumReproduction
+} from '../../api/generated/api';
 import { PlantApi } from '../../api/generated/api';
 import { createApiConfiguration } from '../../api/api-client';
 import type { Plant } from '../models/product';
 import globalAxios, {type AxiosInstance} from "axios";
 
 class PlantService {
-    private plantApi: PlantApi;
+    private plantApi!: PlantApi;
     private axiosInstance: AxiosInstance;
 
     constructor() {
@@ -18,25 +19,20 @@ class PlantService {
         this.initializeApis();
     }
 
-    private initializeApis() {
-        const config = createApiConfiguration();
-        this.plantApi = new PlantApi(config, undefined, this.axiosInstance);
-    }
-
     private setupInterceptors() {
         this.axiosInstance.interceptors.request.use(
             (request) => {
                 const token = this.getToken();
-                console.log('🚀 AdminService Request:', request.url);
+                console.log('🚀 PlantService Request:', request.url);
 
                 if (token && request.headers) {
                     request.headers.Authorization = `Bearer ${token}`;
-                    console.log('✅ Added Authorization header to admin request');
+                    console.log('✅ Added Authorization header to plant request');
                 }
                 return request;
             },
             (error) => {
-                console.error('❌ AdminService request error:', error);
+                console.error('❌ PlantService request error:', error);
                 return Promise.reject(error);
             }
         );
@@ -57,90 +53,105 @@ class PlantService {
         return localStorage.getItem('token');
     }
 
-    private updateApiConfig() {
+    private initializeApis() {
         const config = createApiConfiguration();
-        this.plantApi = new PlantApi(config);
+        this.plantApi = new PlantApi(config, undefined, this.axiosInstance);
     }
 
     async getPlants(family?: string, species?: string): Promise<Plant[]> {
         try {
+            console.log('🟡 PlantService: Получение списка растений');
             const response = await this.plantApi.apiV1PlantsGet({ family, species });
+            console.log('✅ PlantService: Растения успешно получены:', response.data.length);
             return this.mapPlantDTOsToPlants(response.data);
         } catch (error) {
-            console.error('Failed to get plants:', error);
+            console.error('❌ PlantService: Ошибка получения растений:', error);
             throw new Error('Не удалось загрузить список растений');
         }
     }
 
     async getPlantById(id: string): Promise<Plant> {
         try {
+            console.log('🟡 PlantService: Получение растения по ID:', id);
             const response = await this.plantApi.apiV1PlantsIdGet({ id });
+            console.log('✅ PlantService: Растение успешно получено');
             return this.mapPlantDTOToPlant(response.data);
         } catch (error) {
-            console.error('Failed to get plant:', error);
+            console.error('❌ PlantService: Ошибка получения растения:', error);
             throw new Error('Не удалось загрузить информацию о растении');
         }
     }
 
     async createPlant(plantData: Plant): Promise<Plant> {
         try {
+            console.log('📤 PlantService: Создание растения:', plantData);
+
             const plantDTO: ServerControllersModelsPlantDTO = {
                 clientId: plantData.clientId,
                 specie: plantData.specie || null,
                 family: plantData.family || null,
-                flower: this.numberToFlowerEnum(plantData.flower),
-                fruit: this.numberToFruitEnum(plantData.fruit),
-                reproduction: this.numberToReproductionEnum(plantData.reproduction)
+                flower: this.numberToFlowerEnum(plantData.flower || 0),
+                fruit: this.numberToFruitEnum(plantData.fruit || 0),
+                reproduction: this.numberToReproductionEnum(plantData.reproduction || 0)
             };
+
+            console.log('📤 PlantService: Преобразованные данные (DTO):', plantDTO);
 
             const response = await this.plantApi.apiV1PlantsPost({
                 serverControllersModelsPlantDTO: plantDTO
             });
+
+            console.log('✅ PlantService: Растение успешно создано:', response.data);
             return this.mapPlantDTOToPlant(response.data);
         } catch (error) {
-            console.error('Failed to create plant:', error);
+            console.error('❌ PlantService: Ошибка создания растения:', error);
             throw new Error('Не удалось создать растение');
         }
     }
 
     async updatePlant(id: string, plantData: Plant): Promise<void> {
         try {
+            console.log('📤 PlantService: Обновление растения:', { id, plantData });
+
             const plantDTO: ServerControllersModelsPlantDTO = {
                 id,
                 clientId: plantData.clientId,
                 specie: plantData.specie || null,
                 family: plantData.family || null,
-                flower: this.numberToFlowerEnum(plantData.flower),
-                fruit: this.numberToFruitEnum(plantData.fruit),
-                reproduction: this.numberToReproductionEnum(plantData.reproduction)
+                flower: this.numberToFlowerEnum(plantData.flower || 0),
+                fruit: this.numberToFruitEnum(plantData.fruit || 0),
+                reproduction: this.numberToReproductionEnum(plantData.reproduction || 0)
             };
 
             await this.plantApi.apiV1PlantsIdPut({
-                id,
+                id: id,
                 serverControllersModelsPlantDTO: plantDTO
             });
+
+            console.log('✅ PlantService: Растение успешно обновлено');
         } catch (error) {
-            console.error('Failed to update plant:', error);
+            console.error('❌ PlantService: Ошибка обновления растения:', error);
             throw new Error('Не удалось обновить растение');
         }
     }
 
     async deletePlant(id: string): Promise<void> {
         try {
+            console.log('🟡 PlantService: Удаление растения:', id);
             await this.plantApi.apiV1PlantsIdDelete({ id });
+            console.log('✅ PlantService: Растение успешно удалено');
         } catch (error) {
-            console.error('Failed to delete plant:', error);
+            console.error('❌ PlantService: Ошибка удаления растения:', error);
             throw new Error('Не удалось удалить растение');
         }
     }
-
 
     private numberToFlowerEnum(value: number): ServerControllersModelsEnumsEnumFlowers {
         const validValues = [0, 1, 2, 3, 4, 5, 6];
         if (validValues.includes(value)) {
             return value as ServerControllersModelsEnumsEnumFlowers;
         }
-        return 0; 
+        return 0;
     }
 
     private numberToFruitEnum(value: number): ServerControllersModelsEnumsEnumFruit {
@@ -148,7 +159,7 @@ class PlantService {
         if (validValues.includes(value)) {
             return value as ServerControllersModelsEnumsEnumFruit;
         }
-        return 0; 
+        return 0;
     }
 
     private numberToReproductionEnum(value: number): ServerControllersModelsEnumsEnumReproduction {
@@ -156,7 +167,7 @@ class PlantService {
         if (validValues.includes(value)) {
             return value as ServerControllersModelsEnumsEnumReproduction;
         }
-        return 0; 
+        return 0;
     }
 
     private flowerEnumToNumber(value: ServerControllersModelsEnumsEnumFlowers | undefined): number {
@@ -183,9 +194,7 @@ class PlantService {
             family: plantDTO.family || '',
             flower: this.flowerEnumToNumber(plantDTO.flower),
             fruit: this.fruitEnumToNumber(plantDTO.fruit),
-            reproduction: this.reproductionEnumToNumber(plantDTO.reproduction),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            reproduction: this.reproductionEnumToNumber(plantDTO.reproduction)
         };
     }
 
@@ -194,46 +203,8 @@ class PlantService {
             const allPlants = await this.getPlants();
             return allPlants.filter(plant => plant.clientId === clientId);
         } catch (error) {
-            console.error('Failed to get plants by client:', error);
+            console.error('❌ PlantService: Ошибка получения растений клиента:', error);
             throw new Error('Не удалось загрузить растения клиента');
-        }
-    }
-
-    async getPlantsByFamily(family: string): Promise<Plant[]> {
-        try {
-            const response = await this.plantApi.apiV1PlantsGet({ family });
-            return this.mapPlantDTOsToPlants(response.data);
-        } catch (error) {
-            console.error('Failed to get plants by family:', error);
-            throw new Error('Не удалось загрузить растения по семейству');
-        }
-    }
-
-    async getPlantStats(): Promise<{
-        total: number;
-        byFamily: Record<string, number>;
-        byClient: Record<string, number>;
-    }> {
-        try {
-            const plants = await this.getPlants();
-
-            const byFamily: Record<string, number> = {};
-            const byClient: Record<string, number> = {};
-
-            plants.forEach(plant => {
-                byFamily[plant.family] = (byFamily[plant.family] || 0) + 1;
-
-                byClient[plant.clientId] = (byClient[plant.clientId] || 0) + 1;
-            });
-
-            return {
-                total: plants.length,
-                byFamily,
-                byClient
-            };
-        } catch (error) {
-            console.error('Failed to get plant stats:', error);
-            throw new Error('Не удалось загрузить статистику растений');
         }
     }
 }
