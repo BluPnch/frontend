@@ -78,12 +78,27 @@ class PlantService {
     // Создать новое растение
     async createPlant(plant: ServerControllersModelsPlantDTO): Promise<ServerControllersModelsPlantDTO> {
         try {
+            console.log('🔍 PlantService: Creating plant with data:', JSON.stringify(plant, null, 2));
+
             const response = await this.plantApi.apiV1PlantsPost({
                 serverControllersModelsPlantDTO: plant
             });
+
+            console.log('✅ PlantService: Plant created successfully:', response.data);
             return response.data;
         } catch (error: unknown) {
-            console.error('Failed to create plant:', error);
+            console.error('❌ PlantService: Failed to create plant:', error);
+
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as any;
+                console.error('❌ PlantService: Error details:', {
+                    status: axiosError.response?.status,
+                    statusText: axiosError.response?.statusText,
+                    data: axiosError.response?.data,
+                    headers: axiosError.response?.headers
+                });
+            }
+
             throw new Error(error instanceof Error ? error.message : 'Ошибка создания растения');
         }
     }

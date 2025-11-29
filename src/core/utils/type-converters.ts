@@ -46,15 +46,20 @@ export const convertToJournalRecord = (dto: ServerControllersModelsJournalRecord
 };
 
 export const convertToPlantDTO = (plant: Plant): ServerControllersModelsPlantDTO => {
-    return {
+    console.log('🔍 Converting Plant to DTO:', plant);
+
+    const dto: ServerControllersModelsPlantDTO = {
         id: plant.id || undefined,
-        clientId: plant.clientId,
-        specie: plant.specie,
-        family: plant.family,
-        flower: plant.flower as unknown as ServerControllersModelsEnumsEnumFlowers,
-        fruit: plant.fruit as unknown as ServerControllersModelsEnumsEnumFruit,
-        reproduction: plant.reproduction as unknown as ServerControllersModelsEnumsEnumReproduction
+        clientId: plant.clientId || undefined,
+        specie: plant.specie || undefined,
+        family: plant.family || undefined,
+        flower: plant.flower !== undefined ? plant.flower as any : undefined,
+        fruit: plant.fruit !== undefined ? plant.fruit as any : undefined,
+        reproduction: plant.reproduction !== undefined ? plant.reproduction as any : undefined
     };
+
+    console.log('🔍 Converted Plant DTO:', dto);
+    return dto;
 };
 
 export const convertToPlant = (dto: ServerControllersModelsPlantDTO): Plant => {

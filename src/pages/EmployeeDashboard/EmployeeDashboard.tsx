@@ -79,12 +79,17 @@ export const EmployeeDashboard: React.FC = () => {
             console.log('🟡 EmployeeDashboard: Начало загрузки данных');
 
             const [
+                clientsData,
                 employeesData,
                 plantsData,
                 seedsData,
                 journalData,
                 growthStagesData,
             ] = await Promise.all([
+                userService.getClients().catch((error) => {
+                    console.error('❌ Ошибка загрузки клиентов:', error);
+                    return [];
+                }),
                 employeeService.getEmployees().catch((error) => {
                     console.error('❌ Ошибка загрузки сотрудников:', error);
                     return [];
@@ -108,6 +113,7 @@ export const EmployeeDashboard: React.FC = () => {
             ]);
 
             console.log('🟡 EmployeeDashboard: Данные получены:', {
+                clients: clientsData?.length,
                 employees: employeesData?.length,
                 plants: plantsData?.length,
                 seeds: seedsData?.length,
@@ -115,7 +121,6 @@ export const EmployeeDashboard: React.FC = () => {
                 growthStages: growthStagesData?.length
             });
 
-            // Преобразуем данные из DTO в наши интерфейсы
             const convertedPlants = convertPlantsArray(plantsData as any[]);
             const convertedSeeds = convertSeedsArray(seedsData as any[]);
             const convertedJournalRecords = convertJournalRecordsArray(journalData as any[]);
@@ -128,7 +133,7 @@ export const EmployeeDashboard: React.FC = () => {
                 convertedGrowthStages: convertedGrowthStages.length
             });
 
-            setClients([]);
+            setClients(clientsData || []);
             setEmployees(employeesData || []);
             setPlants(convertedPlants);
             setSeeds(convertedSeeds);
@@ -150,7 +155,6 @@ export const EmployeeDashboard: React.FC = () => {
         try {
             console.log('🔍 DEBUG Plant Submit Data:', data);
 
-            // Валидация
             if (!data.family?.trim() || !data.specie?.trim()) {
                 showAlertMessage('Пожалуйста, заполните семейство и вид растения', 'error');
                 return;
@@ -159,33 +163,19 @@ export const EmployeeDashboard: React.FC = () => {
             const plantDTO = convertToPlantDTO(data);
             console.log('🟡 EmployeeDashboard: Отправка растения:', plantDTO);
 
-            let createdPlantId: string;
-
             if (editingPlant && editingPlant.id) {
                 await employeeService.updatePlant(editingPlant.id, plantDTO);
-                createdPlantId = editingPlant.id;
                 showAlertMessage('Растение успешно обновлено', 'success');
             } else {
                 const result = await plantService.createPlant(plantDTO);
-                createdPlantId = result.id || '';
-                console.log('✅ EmployeeDashboard: Растение создано, ID:', createdPlantId);
+                console.log('✅ EmployeeDashboard: Растение создано, ID:', result.id);
                 showAlertMessage('Растение успешно создано', 'success');
-
-                // 🔥 КРИТИЧЕСКИ ВАЖНО: Привязать растение к сотруднику
-                if (createdPlantId) {
-                    try {
-                        await employeeService.assignPlantToEmployee(createdPlantId);
-                        console.log('✅ Растение привязано к сотруднику');
-                    } catch (assignError) {
-                        console.error('⚠️ Не удалось привязать растение к сотруднику:', assignError);
-                        // Не прерываем выполнение, т.к. растение уже создано
-                    }
-                }
             }
 
             setShowPlantModal(false);
             setEditingPlant(null);
             await loadAllData();
+            
         } catch (error) {
             console.error('❌ EmployeeDashboard: Ошибка сохранения растения:', error);
             showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');

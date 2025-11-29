@@ -18,6 +18,7 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                                                           onClose,
                                                           onSubmit }) => {
     const [formData, setFormData] = useState<Partial<Plant>>({
+        id: '',
         clientId: '',
         specie: '',
         family: '',
@@ -32,9 +33,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         if (plant) {
             setFormData(plant);
         } else {
-            // Для нового растения автоматически выбираем первого клиента если есть
             setFormData({
-                clientId: clients[0]?.id || '',
+                clientId: clients.length > 0 ? clients[0].id : '',
                 specie: '',
                 family: '',
                 flower: 0,
@@ -46,11 +46,28 @@ export const PlantModal: React.FC<PlantModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (formData.clientId && formData.specie && formData.family) {
-            onSubmit(formData as Plant);
-        } else {
-            alert('Пожалуйста, заполните все обязательные поля');
+        console.log('🟡 PlantModal: Отправка формы', formData);
+
+        if (!formData.family?.trim()) {
+            console.error('❌ PlantModal: Семейство не заполнено');
+            alert('Пожалуйста, заполните семейство растения');
+            return;
         }
+
+        if (!formData.specie?.trim()) {
+            console.error('❌ PlantModal: Вид не заполнен');
+            alert('Пожалуйста, заполните вид растения');
+            return;
+        }
+
+        if (!formData.clientId?.trim()) {
+            console.error('❌ PlantModal: Клиент не выбран');
+            alert('Пожалуйста, выберите клиента');
+            return;
+        }
+
+        console.log('✅ PlantModal: Все поля заполнены, отправляем данные');
+        onSubmit(formData);
     };
 
     const handleChange = (field: keyof Plant, value: any) => {
@@ -66,24 +83,21 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                 </div>
 
                 <form onSubmit={handleSubmit} className="form">
-                    {/* Для сотрудника выбор клиента может быть ограничен или скрыт */}
-                    {clients.length > 0 && (
-                        <div className="form-group">
-                            <label>Клиент *</label>
-                            <select
-                                value={formData.clientId || ''}
-                                onChange={(e) => handleChange('clientId', e.target.value)}
-                                required
-                            >
-                                <option value="">Выберите клиента</option>
-                                {clients.map(client => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.companyName || client.id}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
+                    <div className="form-group">
+                        <label>Клиент *</label>
+                        <select
+                            value={formData.clientId || ''}
+                            onChange={(e) => handleChange('clientId', e.target.value)}
+                            required
+                        >
+                            <option value="">Выберите клиента</option>
+                            {clients.map(client => (
+                                <option key={client.id} value={client.id}>
+                                    {client.companyName || client.id}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
                     <div className="form-group">
                         <label>Вид *</label>

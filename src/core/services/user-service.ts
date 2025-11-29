@@ -1,6 +1,6 @@
 import {
     UserApi,
-    AuthApi
+    AuthApi, ClientApi, type ServerControllersModelsClientDTO
 } from '../../api/generated/api';
 import type {
     ServerControllersModelsUserDTO,
@@ -238,6 +238,37 @@ class UserService {
             } else {
                 throw new Error('Неизвестная ошибка при получении данных пользователя');
             }
+        }
+    }
+
+    async getClients(companyName?: string, phoneNumber?: string): Promise<ServerControllersModelsClientDTO[]> {
+        try {
+            const config = createApiConfiguration();
+            const axiosInstance = globalAxios.create();
+
+            axiosInstance.interceptors.request.use(
+                (request) => {
+                    const token = this.getToken();
+                    if (token && request.headers) {
+                        request.headers.Authorization = `Bearer ${token}`;
+                    }
+                    return request;
+                },
+                (error) => {
+                    console.error('❌ UserService request error:', error);
+                    return Promise.reject(error);
+                }
+            );
+
+            const clientApi = new ClientApi(config, undefined, axiosInstance);
+            const response = await clientApi.apiV1ClientsGet({
+                companyName,
+                phoneNumber
+            });
+            return response.data;
+        } catch (error: unknown) {
+            console.error('Failed to get clients:', error);
+            throw new Error(error instanceof Error ? error.message : 'Ошибка получения списка клиентов');
         }
     }
 
