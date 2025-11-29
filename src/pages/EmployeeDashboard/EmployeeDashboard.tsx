@@ -16,13 +16,22 @@ import { seedService } from "../../core/services/seed-service";
 import { plantService } from "../../core/services/plant-service";
 import { journalService } from "../../core/services/journal-service";
 import {userService} from "../../core/services/user-service.ts";
-import {adminService} from "../../core/services/admin-service.ts";
+import {employeeService} from "../../core/services/employee-service.ts";
+import {
+    convertToJournalRecordDTO,
+    convertToPlantDTO,
+    convertToSeedDTO,
+    convertPlantsArray,
+    convertSeedsArray,
+    convertJournalRecordsArray,
+    convertGrowthStagesArray
+} from '../../core/utils/type-converters';
 
 type TabType = 'journal' | 'plants' | 'seeds';
 
 export const EmployeeDashboard: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [activeTab, setActiveTab] = useState<TabType>('journal'); // Исправлено: начальная вкладка 'journal'
+    const [activeTab, setActiveTab] = useState<TabType>('journal');
     const [clients, setClients] = useState<Client[]>([]);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [plants, setPlants] = useState<Plant[]>([]);
@@ -67,30 +76,68 @@ export const EmployeeDashboard: React.FC = () => {
 
     const loadAllData = async () => {
         try {
+            console.log('🟡 EmployeeDashboard: Начало загрузки данных');
+
             const [
-                clientsData,
                 employeesData,
                 plantsData,
                 seedsData,
                 journalData,
                 growthStagesData,
             ] = await Promise.all([
-                adminService.getClients().catch(() => []),
-                adminService.getEmployees().catch(() => []),
-                plantService.getPlants().catch(() => []),
-                seedService.getSeeds().catch(() => []),
-                journalService.getJournalRecords().catch(() => []),
-                journalService.getGrowthStages().catch(() => []),
+                employeeService.getEmployees().catch((error) => {
+                    console.error('❌ Ошибка загрузки сотрудников:', error);
+                    return [];
+                }),
+                employeeService.getMyPlants().catch((error) => {
+                    console.error('❌ Ошибка загрузки растений:', error);
+                    return [];
+                }),
+                seedService.getSeeds().catch((error) => {
+                    console.error('❌ Ошибка загрузки семян:', error);
+                    return [];
+                }),
+                employeeService.getJournalRecords().catch((error) => {
+                    console.error('❌ Ошибка загрузки журнала:', error);
+                    return [];
+                }),
+                employeeService.getGrowthStages().catch((error) => {
+                    console.error('❌ Ошибка загрузки стадий роста:', error);
+                    return [];
+                }),
             ]);
 
-            setClients(clientsData);
-            setEmployees(employeesData);
-            setPlants(plantsData);
-            setSeeds(seedsData);
-            setJournalRecords(journalData);
-            setGrowthStages(growthStagesData);
+            console.log('🟡 EmployeeDashboard: Данные получены:', {
+                employees: employeesData?.length,
+                plants: plantsData?.length,
+                seeds: seedsData?.length,
+                journal: journalData?.length,
+                growthStages: growthStagesData?.length
+            });
+
+            // Преобразуем данные из DTO в наши интерфейсы
+            const convertedPlants = convertPlantsArray(plantsData as any[]);
+            const convertedSeeds = convertSeedsArray(seedsData as any[]);
+            const convertedJournalRecords = convertJournalRecordsArray(journalData as any[]);
+            const convertedGrowthStages = convertGrowthStagesArray(growthStagesData as any[]);
+
+            console.log('🟡 EmployeeDashboard: Данные преобразованы:', {
+                convertedPlants: convertedPlants.length,
+                convertedSeeds: convertedSeeds.length,
+                convertedJournalRecords: convertedJournalRecords.length,
+                convertedGrowthStages: convertedGrowthStages.length
+            });
+
+            setClients([]);
+            setEmployees(employeesData || []);
+            setPlants(convertedPlants);
+            setSeeds(convertedSeeds);
+            setJournalRecords(convertedJournalRecords);
+            setGrowthStages(convertedGrowthStages);
+
+            console.log('✅ EmployeeDashboard: Данные загружены и установлены в состояние');
         } catch (error) {
-            console.error('Failed to load data:', error);
+            console.error('❌ EmployeeDashboard: Ошибка загрузки данных:', error);
             showAlertMessage('Ошибка загрузки данных', 'error');
         }
     };
@@ -101,17 +148,46 @@ export const EmployeeDashboard: React.FC = () => {
 
     const handlePlantSubmit = async (data: Plant) => {
         try {
+            console.log('🔍 DEBUG Plant Submit Data:', data);
+
+            // Валидация
+            if (!data.family?.trim() || !data.specie?.trim()) {
+                showAlertMessage('Пожалуйста, заполните семейство и вид растения', 'error');
+                return;
+            }
+
+            const plantDTO = convertToPlantDTO(data);
+            console.log('🟡 EmployeeDashboard: Отправка растения:', plantDTO);
+
+            let createdPlantId: string;
+
             if (editingPlant && editingPlant.id) {
-                await plantService.updatePlant(editingPlant.id, data);
+                await employeeService.updatePlant(editingPlant.id, plantDTO);
+                createdPlantId = editingPlant.id;
                 showAlertMessage('Растение успешно обновлено', 'success');
             } else {
-                await plantService.createPlant(data);
+                const result = await plantService.createPlant(plantDTO);
+                createdPlantId = result.id || '';
+                console.log('✅ EmployeeDashboard: Растение создано, ID:', createdPlantId);
                 showAlertMessage('Растение успешно создано', 'success');
+
+                // 🔥 КРИТИЧЕСКИ ВАЖНО: Привязать растение к сотруднику
+                if (createdPlantId) {
+                    try {
+                        await employeeService.assignPlantToEmployee(createdPlantId);
+                        console.log('✅ Растение привязано к сотруднику');
+                    } catch (assignError) {
+                        console.error('⚠️ Не удалось привязать растение к сотруднику:', assignError);
+                        // Не прерываем выполнение, т.к. растение уже создано
+                    }
+                }
             }
+
             setShowPlantModal(false);
             setEditingPlant(null);
             await loadAllData();
         } catch (error) {
+            console.error('❌ EmployeeDashboard: Ошибка сохранения растения:', error);
             showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
         }
     };
@@ -124,24 +200,28 @@ export const EmployeeDashboard: React.FC = () => {
             showAlertMessage('Растение успешно удалено', 'success');
             await loadAllData();
         } catch (error) {
+            console.error('❌ EmployeeDashboard: Ошибка удаления растения:', error);
             showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
         }
     };
 
     const handleSeedSubmit = async (data: Seed) => {
         try {
+            const seedDTO = convertToSeedDTO(data);
+            console.log('🟡 EmployeeDashboard: Отправка семени:', seedDTO);
+
             if (editingSeed && editingSeed.id) {
-                await seedService.updateSeed(editingSeed.id, data);
+                await seedService.updateSeed(editingSeed.id, seedDTO);
                 showAlertMessage('Семя успешно обновлено', 'success');
             } else {
-                await seedService.createSeed(data);
+                await seedService.createSeed(seedDTO);
                 showAlertMessage('Семя успешно создано', 'success');
             }
             setShowSeedModal(false);
             setEditingSeed(null);
             await loadAllData();
         } catch (error) {
-            console.error('Seed submission error:', error);
+            console.error('❌ EmployeeDashboard: Ошибка сохранения семени:', error);
             showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
         }
     };
@@ -154,6 +234,7 @@ export const EmployeeDashboard: React.FC = () => {
             showAlertMessage('Семя успешно удалено', 'success');
             await loadAllData();
         } catch (error) {
+            console.error('❌ EmployeeDashboard: Ошибка удаления семени:', error);
             showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
         }
     };
@@ -162,11 +243,29 @@ export const EmployeeDashboard: React.FC = () => {
         try {
             console.log('📝 EmployeeDashboard: Получены данные из модалки:', data);
 
+            if (!data.plantId || !data.growthStageId || !data.employeeId) {
+                showAlertMessage('Пожалуйста, заполните все обязательные поля: растение, стадия роста, сотрудник', 'error');
+                return;
+            }
+
+            if (data.plantHeight === undefined || data.plantHeight < 0) {
+                showAlertMessage('Высота растения должна быть положительным числом', 'error');
+                return;
+            }
+
+            if (data.fruitCount === undefined || data.fruitCount < 0) {
+                showAlertMessage('Количество плодов должно быть положительным числом', 'error');
+                return;
+            }
+
+            const journalDTO = convertToJournalRecordDTO(data);
+            console.log('📝 EmployeeDashboard: Преобразованные данные:', journalDTO);
+
             if (editingJournal && editingJournal.id) {
-                await journalService.updateJournalRecord(editingJournal.id, data);
+                await employeeService.updateJournalRecord(editingJournal.id, journalDTO);
                 showAlertMessage('Запись журнала успешно обновлена', 'success');
             } else {
-                const result = await journalService.createJournalRecord(data);
+                const result = await employeeService.createJournalRecord(journalDTO);
                 console.log('✅ EmployeeDashboard: Запись создана, ответ сервера:', result);
                 showAlertMessage('Запись журнала успешно создана', 'success');
             }
@@ -184,17 +283,17 @@ export const EmployeeDashboard: React.FC = () => {
         if (!confirm('Вы уверены, что хотите удалить эту запись журнала?')) return;
 
         try {
-            await journalService.deleteJournalRecord(id);
+            await employeeService.deleteJournalRecord(id);
             showAlertMessage('Запись журнала успешно удалена', 'success');
             await loadAllData();
         } catch (error) {
+            console.error('❌ EmployeeDashboard: Ошибка удаления записи журнала:', error);
             showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
         }
     };
 
     const getClientName = (clientId: string) => {
-        const client = clients.find(c => c.id === clientId);
-        return client ? (client.companyName || client.id?.substring(0, 8) + '...') : '-';
+        return 'Клиент';
     };
 
     const getPlantInfo = (plantId: string) => {

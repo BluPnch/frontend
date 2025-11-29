@@ -53,33 +53,6 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                     <button className="close" onClick={onClose}>×</button>
                 </div>
 
-                <div style={{padding: '10px', background: '#f0f0f0', marginBottom: '10px', textAlign: 'center'}}>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            console.log('🟡 TEST: Заполняю форму растения тестовыми данными');
-                            setFormData({
-                                family: 'Rosaceae',
-                                specie: 'Rosa rubiginosa',
-                                clientId: clients[0]?.id || '',
-                                flower: 1,
-                                fruit: 2,
-                                reproduction: 3
-                            });
-                        }}
-                        style={{
-                            background: 'orange',
-                            color: 'white',
-                            padding: '8px 16px',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        🧪 ЗАПОЛНИТЬ ТЕСТОВЫМИ ДАННЫМИ
-                    </button>
-                </div>
-
                 <form onSubmit={handleSubmit} className="form">
                     <div className="form-group">
                         <label>Клиент *</label>

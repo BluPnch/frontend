@@ -41,7 +41,7 @@ export const JournalTab: React.FC<JournalTabProps> = ({
         console.log('🟢 JournalTab: Вызываю onAddRecord');
         onAddRecord();
     };
-    
+
     return (
         <div className="journal-tab">
             <div className="tab-header">
@@ -67,7 +67,6 @@ export const JournalTab: React.FC<JournalTabProps> = ({
                             <th>Дата</th>
                             <th>Растение</th>
                             <th>Стадия роста</th>
-                            <th>Сотрудник</th>
                             <th>Высота (см)</th>
                             <th>Плоды</th>
                             <th>Состояние</th>
@@ -80,7 +79,6 @@ export const JournalTab: React.FC<JournalTabProps> = ({
                                 <td>{new Date(record.date).toLocaleDateString('ru-RU')}</td>
                                 <td>{getPlantInfo(record.plantId)}</td>
                                 <td>{getGrowthStageName(record.growthStageId)}</td>
-                                <td>{getEmployeeName(record.employeeId)}</td>
                                 <td>{record.plantHeight}</td>
                                 <td>{record.fruitCount}</td>
                                 <td>{getConditionName(record.condition)}</td>

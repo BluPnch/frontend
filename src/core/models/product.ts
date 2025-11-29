@@ -1,27 +1,3 @@
-export interface Seed {
-    id: string;
-    plantId: string;
-    maturity: string;
-    viability: number;
-    lightRequirements: number;
-    waterRequirements: string;
-    temperatureRequirements: number;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
-export interface Plant {
-    id: string;
-    clientId: string;
-    specie: string;
-    family: string;
-    flower: number;
-    fruit: number;
-    reproduction: number;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
 export interface JournalRecord {
     id: string;
     plantId: string;
@@ -34,9 +10,28 @@ export interface JournalRecord {
     notes?: string;
 }
 
+export interface Plant {
+    id: string;
+    clientId: string;
+    specie: string;
+    family: string;
+    flower: number;
+    fruit: number;
+    reproduction: number;
+}
+
+export interface Seed {
+    id: string;
+    plantId: string;
+    maturity: string;
+    viability: number;
+    lightRequirements: number;
+    waterRequirements: string;
+    temperatureRequirements: number;
+}
+
 export interface GrowthStage {
     id: string;
     name: string;
-    description: string;
-    durationDays?: number;
+    description?: string;
 }

@@ -67,33 +67,6 @@ export const SeedModal: React.FC<SeedModalProps> = ({
                     <button className="close" onClick={onClose}>×</button>
                 </div>
 
-                <div style={{padding: '10px', background: '#f0f0f0', marginBottom: '10px', textAlign: 'center'}}>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            console.log('🟡 TEST: Заполняю форму семени тестовыми данными');
-                            setFormData({
-                                plantId: plants[0]?.id || '',
-                                maturity: 'Средняя',
-                                viability: 3,
-                                lightRequirements: 2,
-                                waterRequirements: 'Умеренный полив',
-                                temperatureRequirements: 25
-                            });
-                        }}
-                        style={{
-                            background: 'orange',
-                            color: 'white',
-                            padding: '8px 16px',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        🧪 ЗАПОЛНИТЬ ТЕСТОВЫМИ ДАННЫМИ
-                    </button>
-                </div>
-
                 <form onSubmit={handleSubmit} className="form">
                     <div className="form-group">
                         <label>Растение *</label>

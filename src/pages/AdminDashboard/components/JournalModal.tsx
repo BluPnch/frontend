@@ -97,34 +97,6 @@ export const JournalModal: React.FC<JournalModalProps> = ({
                     <button className="close" onClick={onClose}>×</button>
                 </div>
 
-                <div style={{padding: '10px', background: '#f0f0f0', marginBottom: '10px', textAlign: 'center'}}>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            console.log('🟡 TEST: Заполняю форму тестовыми данными');
-                            setFormData({
-                                plantId: plants[0]?.id || '',
-                                growthStageId: growthStages[0]?.id || '',
-                                employeeId: employees[0]?.id || '',
-                                plantHeight: 10,
-                                fruitCount: 5,
-                                condition: 5,
-                                date: new Date().toISOString().split('T')[0]
-                            });
-                        }}
-                        style={{
-                            background: 'orange',
-                            color: 'white',
-                            padding: '8px 16px',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        🧪 ЗАПОЛНИТЬ ТЕСТОВЫМИ ДАННЫМИ
-                    </button>
-                </div>
-
                 <form onSubmit={handleSubmit} className="form">
                     <div className="form-group">
                         <label>Дата *</label>

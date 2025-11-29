@@ -13,9 +13,9 @@ interface PlantModalProps {
 
 export const PlantModal: React.FC<PlantModalProps> = ({
                                                           show,
-                                                          plant, 
-                                                          clients, 
-                                                          onClose, 
+                                                          plant,
+                                                          clients,
+                                                          onClose,
                                                           onSubmit }) => {
     const [formData, setFormData] = useState<Partial<Plant>>({
         clientId: '',
@@ -27,17 +27,29 @@ export const PlantModal: React.FC<PlantModalProps> = ({
     });
 
     useEffect(() => {
-        console.log('🟡 JournalModal: Монтирование/обновление компонента');
-        
+        console.log('🟡 PlantModal: Монтирование/обновление компонента');
+
         if (plant) {
             setFormData(plant);
+        } else {
+            // Для нового растения автоматически выбираем первого клиента если есть
+            setFormData({
+                clientId: clients[0]?.id || '',
+                specie: '',
+                family: '',
+                flower: 0,
+                fruit: 0,
+                reproduction: 0
+            });
         }
-    }, [plant, show]);
+    }, [plant, show, clients]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (formData.clientId && formData.specie && formData.family) {
             onSubmit(formData as Plant);
+        } else {
+            alert('Пожалуйста, заполните все обязательные поля');
         }
     };
 
@@ -53,49 +65,25 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                     <button className="close" onClick={onClose}>×</button>
                 </div>
 
-                <div style={{padding: '10px', background: '#f0f0f0', marginBottom: '10px', textAlign: 'center'}}>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            console.log('🟡 TEST: Заполняю форму растения тестовыми данными');
-                            setFormData({
-                                family: 'Rosaceae',
-                                specie: 'Rosa rubiginosa',
-                                clientId: clients[0]?.id || '',
-                                flower: 1,
-                                fruit: 2,
-                                reproduction: 3
-                            });
-                        }}
-                        style={{
-                            background: 'orange',
-                            color: 'white',
-                            padding: '8px 16px',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        🧪 ЗАПОЛНИТЬ ТЕСТОВЫМИ ДАННЫМИ
-                    </button>
-                </div>
-
                 <form onSubmit={handleSubmit} className="form">
-                    <div className="form-group">
-                        <label>Клиент *</label>
-                        <select
-                            value={formData.clientId || ''}
-                            onChange={(e) => handleChange('clientId', e.target.value)}
-                            required
-                        >
-                            <option value="">Выберите клиента</option>
-                            {clients.map(client => (
-                                <option key={client.id} value={client.id}>
-                                    {client.companyName || client.id}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    {/* Для сотрудника выбор клиента может быть ограничен или скрыт */}
+                    {clients.length > 0 && (
+                        <div className="form-group">
+                            <label>Клиент *</label>
+                            <select
+                                value={formData.clientId || ''}
+                                onChange={(e) => handleChange('clientId', e.target.value)}
+                                required
+                            >
+                                <option value="">Выберите клиента</option>
+                                {clients.map(client => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.companyName || client.id}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className="form-group">
                         <label>Вид *</label>

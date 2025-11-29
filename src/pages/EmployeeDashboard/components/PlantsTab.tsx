@@ -20,7 +20,7 @@ export const PlantsTab: React.FC<PlantsTabProps> = ({
                                                     }) => {
     const getClientName = (clientId: string) => {
         const client = clients.find(c => c.id === clientId);
-        return client ? client.companyName || client.id!.substring(0, 8) + '...' : '-';
+        return client ? client.companyName || 'Клиент' : 'Клиент';
     };
 
     const getFlowerName = (flower: number) => {
