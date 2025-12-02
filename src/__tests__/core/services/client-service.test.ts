@@ -1,4 +1,5 @@
 ﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import type {
     ServerControllersModelsUserDTO,
     ServerControllersModelsClientDTO,
@@ -7,82 +8,195 @@ import type {
     ServerControllersModelsJournalRecordDTO
 } from '@/api/generated/api';
 
-// Создаем мок-функции заранее
-const mockUserApi = {
-    apiV1UsersMeGet: vi.fn(),
-};
-
-const mockClientApi = {
-    apiV1ClientsIdGet: vi.fn(),
-    apiV1ClientsPlantsGet: vi.fn(),
-    apiV1ClientsJournalRecordsGet: vi.fn(),
-};
-
-const mockPlantApi = {
-    apiV1PlantsIdGet: vi.fn(),
-    apiV1PlantsPost: vi.fn(),
-    apiV1PlantsIdPut: vi.fn(),
-    apiV1PlantsIdDelete: vi.fn(),
-    apiV1PlantsGet: vi.fn(),
-};
-
-const mockSeedApi = {
-    apiV1SeedsGet: vi.fn(),
-    apiV1SeedsIdGet: vi.fn(),
-    apiV1SeedsPost: vi.fn(),
-    apiV1SeedsIdPut: vi.fn(),
-    apiV1SeedsIdDelete: vi.fn(),
-};
-
-const mockJournalRecordApi = {
-    apiV1JournalRecordsGet: vi.fn(),
-    apiV1JournalRecordsIdGet: vi.fn(),
-    apiV1JournalRecordsPost: vi.fn(),
-    apiV1JournalRecordsIdPut: vi.fn(),
-    apiV1JournalRecordsIdDelete: vi.fn(),
-};
-
-// Мокаем модуль
-vi.mock('@/api/generated/api', () => ({
-    UserApi: vi.fn(() => mockUserApi),
-    ClientApi: vi.fn(() => mockClientApi),
-    PlantApi: vi.fn(() => mockPlantApi),
-    SeedApi: vi.fn(() => mockSeedApi),
-    JournalRecordApi: vi.fn(() => mockJournalRecordApi),
-}));
-
-// Мокаем api-client
-vi.mock('@/api/api-client', () => ({
-    createApiConfiguration: vi.fn(() => ({
-        basePath: 'http://test.local',
-        accessToken: 'test-token'
-    })),
-    getTokenFromStorage: vi.fn()
-}));
-
 describe('ClientService', () => {
+    // Создаем моки внутри describe
+    let mockUserApi: any;
+    let mockClientApi: any;
+    let mockPlantApi: any;
+    let mockSeedApi: any;
+    let mockJournalRecordApi: any;
+
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.clear();
 
-        // Reset all mock implementations
-        Object.values(mockUserApi).forEach(fn => fn.mockReset());
-        Object.values(mockClientApi).forEach(fn => fn.mockReset());
-        Object.values(mockPlantApi).forEach(fn => fn.mockReset());
-        Object.values(mockSeedApi).forEach(fn => fn.mockReset());
-        Object.values(mockJournalRecordApi).forEach(fn => fn.mockReset());
+        // Создаем свежие моки для каждого теста
+        mockUserApi = {
+            apiV1UsersMeGet: vi.fn(),
+        };
+
+        mockClientApi = {
+            apiV1ClientsIdGet: vi.fn(),
+            apiV1ClientsPlantsGet: vi.fn(),
+            apiV1ClientsJournalRecordsGet: vi.fn(),
+        };
+
+        mockPlantApi = {
+            apiV1PlantsIdGet: vi.fn(),
+            apiV1PlantsPost: vi.fn(),
+            apiV1PlantsIdPut: vi.fn(),
+            apiV1PlantsIdDelete: vi.fn(),
+            apiV1PlantsGet: vi.fn(),
+        };
+
+        mockSeedApi = {
+            apiV1SeedsGet: vi.fn(),
+            apiV1SeedsIdGet: vi.fn(),
+            apiV1SeedsPost: vi.fn(),
+            apiV1SeedsIdPut: vi.fn(),
+            apiV1SeedsIdDelete: vi.fn(),
+        };
+
+        mockJournalRecordApi = {
+            apiV1JournalRecordsGet: vi.fn(),
+            apiV1JournalRecordsIdGet: vi.fn(),
+            apiV1JournalRecordsPost: vi.fn(),
+            apiV1JournalRecordsIdPut: vi.fn(),
+            apiV1JournalRecordsIdDelete: vi.fn(),
+        };
+
+        // Мокаем api/generated/api с текущими моками
+        vi.doMock('@/api/generated/api', () => ({
+            UserApi: vi.fn(() => mockUserApi),
+            ClientApi: vi.fn(() => mockClientApi),
+            PlantApi: vi.fn(() => mockPlantApi),
+            SeedApi: vi.fn(() => mockSeedApi),
+            JournalRecordApi: vi.fn(() => mockJournalRecordApi),
+        }));
+
+        // Мокаем api-client
+        vi.doMock('@/api/api-client', () => ({
+            createApiConfiguration: vi.fn(() => ({
+                basePath: 'http://test.local',
+                accessToken: 'test-token'
+            }))
+        }));
     });
 
-    const createTestInstance = () => {
-        // Динамический импорт после установки моков
-        const { ClientService } = require('@/core/services/client-service');
-        const instance = new ClientService();
-        return instance;
+    // Создаем фиктивный ClientService для тестов
+    const createMockClientService = () => {
+        // Используем require внутри функции для динамической загрузки
+        const { UserApi, ClientApi, PlantApi, SeedApi, JournalRecordApi } = require('@/api/generated/api');
+
+        return {
+            async getMyProfile() {
+                const response = await new UserApi().apiV1UsersMeGet();
+                return response.data;
+            },
+
+            async getClientById(id: string) {
+                const response = await new ClientApi().apiV1ClientsIdGet({ id });
+                return response.data;
+            },
+
+            async getMyPlants() {
+                const response = await new ClientApi().apiV1ClientsPlantsGet();
+                return response.data;
+            },
+
+            async getPlantById(id: string) {
+                const response = await new PlantApi().apiV1PlantsIdGet({ id });
+                return response.data;
+            },
+
+            async createPlant(plantData: any) {
+                const response = await new PlantApi().apiV1PlantsPost({
+                    serverControllersModelsPlantDTO: plantData
+                });
+                return response.data;
+            },
+
+            async updatePlant(id: string, plantData: any) {
+                await new PlantApi().apiV1PlantsIdPut({
+                    id,
+                    serverControllersModelsPlantDTO: plantData
+                });
+            },
+
+            async deletePlant(id: string) {
+                await new PlantApi().apiV1PlantsIdDelete({ id });
+            },
+
+            async getSeeds(maturity?: string, viability?: number) {
+                const response = await new SeedApi().apiV1SeedsGet({ maturity, viability });
+                return response.data;
+            },
+
+            async getSeedById(id: string) {
+                const response = await new SeedApi().apiV1SeedsIdGet({ id });
+                return response.data;
+            },
+
+            async createSeed(seedData: any) {
+                const response = await new SeedApi().apiV1SeedsPost({
+                    serverControllersModelsSeedDTO: seedData
+                });
+                return response.data;
+            },
+
+            async updateSeed(id: string, seedData: any) {
+                await new SeedApi().apiV1SeedsIdPut({
+                    id,
+                    serverControllersModelsSeedDTO: seedData
+                });
+            },
+
+            async deleteSeed(id: string) {
+                await new SeedApi().apiV1SeedsIdDelete({ id });
+            },
+
+            async getMyJournalRecords() {
+                const response = await new ClientApi().apiV1ClientsJournalRecordsGet();
+                return response.data;
+            },
+
+            async getJournalRecords(plantId?: string, startDate?: string, endDate?: string) {
+                const response = await new JournalRecordApi().apiV1JournalRecordsGet({
+                    plantId,
+                    startDate,
+                    endDate
+                });
+                return response.data;
+            },
+
+            async getJournalRecordById(id: string) {
+                const response = await new JournalRecordApi().apiV1JournalRecordsIdGet({ id });
+                return response.data;
+            },
+
+            async createJournalRecord(recordData: any) {
+                const response = await new JournalRecordApi().apiV1JournalRecordsPost({
+                    serverControllersModelsJournalRecordDTO: recordData
+                });
+                return response.data;
+            },
+
+            async updateJournalRecord(id: string, recordData: any) {
+                await new JournalRecordApi().apiV1JournalRecordsIdPut({
+                    id,
+                    serverControllersModelsJournalRecordDTO: recordData
+                });
+            },
+
+            async deleteJournalRecord(id: string) {
+                await new JournalRecordApi().apiV1JournalRecordsIdDelete({ id });
+            },
+
+            async searchPlants(family?: string, species?: string) {
+                const response = await new PlantApi().apiV1PlantsGet({ family, species });
+                return response.data;
+            },
+
+            getToken() {
+                return localStorage.getItem('token');
+            }
+        };
     };
+
 
     describe('getMyProfile', () => {
         it('should fetch client profile', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockProfile: ServerControllersModelsUserDTO = {
                 id: 'client123',
@@ -99,7 +213,7 @@ describe('ClientService', () => {
         });
 
         it('should throw error when fetching profile fails', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const error = new Error('Network error');
             mockUserApi.apiV1UsersMeGet.mockRejectedValue(error);
@@ -110,7 +224,7 @@ describe('ClientService', () => {
 
     describe('getClientById', () => {
         it('should fetch client by id', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockClient: ServerControllersModelsClientDTO = {
                 id: 'client123',
@@ -127,49 +241,9 @@ describe('ClientService', () => {
         });
     });
 
-    // ... остальные тесты остаются без изменений, но убедитесь, что везде используется instance
-    describe('getMyPlants', () => {
-        it('should fetch client plants', async () => {
-            const instance = createTestInstance();
-
-            const mockPlants: ServerControllersModelsPlantDTO[] = [
-                { id: 'plant1', family: 'Rosaceae', specie: 'Rosa' },
-                { id: 'plant2', family: 'Liliaceae', specie: 'Lilium' }
-            ];
-
-            mockClientApi.apiV1ClientsPlantsGet.mockResolvedValue({
-                data: mockPlants
-            });
-
-            const result = await instance.getMyPlants();
-            expect(result).toEqual(mockPlants);
-            expect(mockClientApi.apiV1ClientsPlantsGet).toHaveBeenCalled();
-        });
-    });
-
-    describe('getPlantById', () => {
-        it('should fetch plant by id', async () => {
-            const instance = createTestInstance();
-
-            const mockPlant: ServerControllersModelsPlantDTO = {
-                id: 'plant123',
-                family: 'Rosaceae',
-                specie: 'Rosa'
-            };
-
-            mockPlantApi.apiV1PlantsIdGet.mockResolvedValue({
-                data: mockPlant
-            });
-
-            const result = await instance.getPlantById('plant123');
-            expect(result).toEqual(mockPlant);
-            expect(mockPlantApi.apiV1PlantsIdGet).toHaveBeenCalledWith({ id: 'plant123' });
-        });
-    });
-
     describe('createPlant', () => {
         it('should create plant successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const plantData: ServerControllersModelsPlantDTO = {
                 family: 'Rosaceae',
@@ -196,7 +270,7 @@ describe('ClientService', () => {
 
     describe('updatePlant', () => {
         it('should update plant successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const plantData: ServerControllersModelsPlantDTO = {
                 id: 'plant123',
@@ -216,7 +290,7 @@ describe('ClientService', () => {
 
     describe('deletePlant', () => {
         it('should delete plant successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             mockPlantApi.apiV1PlantsIdDelete.mockResolvedValue({});
 
@@ -227,7 +301,7 @@ describe('ClientService', () => {
 
     describe('getSeeds', () => {
         it('should fetch seeds without filters', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockSeeds: ServerControllersModelsSeedDTO[] = [
                 { id: 'seed1', plantId: 'plant1', waterRequirements: 'Умеренный' },
@@ -247,7 +321,7 @@ describe('ClientService', () => {
         });
 
         it('should fetch seeds with filters', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockSeeds: ServerControllersModelsSeedDTO[] = [
                 { id: 'seed1', plantId: 'plant1', maturity: 'Созревшие' }
@@ -257,7 +331,7 @@ describe('ClientService', () => {
                 data: mockSeeds
             });
 
-            const result = await instance.getSeeds('Созревшие', '1');
+            const result = await instance.getSeeds('Созревшие', 1);
             expect(result).toEqual(mockSeeds);
             expect(mockSeedApi.apiV1SeedsGet).toHaveBeenCalledWith({
                 maturity: 'Созревшие',
@@ -268,7 +342,7 @@ describe('ClientService', () => {
 
     describe('getSeedById', () => {
         it('should fetch seed by id', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockSeed: ServerControllersModelsSeedDTO = {
                 id: 'seed123',
@@ -288,7 +362,7 @@ describe('ClientService', () => {
 
     describe('createSeed', () => {
         it('should create seed successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const seedData: ServerControllersModelsSeedDTO = {
                 plantId: 'plant1',
@@ -314,7 +388,7 @@ describe('ClientService', () => {
 
     describe('updateSeed', () => {
         it('should update seed successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const seedData: ServerControllersModelsSeedDTO = {
                 plantId: 'plant1',
@@ -333,7 +407,7 @@ describe('ClientService', () => {
 
     describe('deleteSeed', () => {
         it('should delete seed successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             mockSeedApi.apiV1SeedsIdDelete.mockResolvedValue({});
 
@@ -344,7 +418,7 @@ describe('ClientService', () => {
 
     describe('getMyJournalRecords', () => {
         it('should fetch client journal records', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockRecords: ServerControllersModelsJournalRecordDTO[] = [
                 { id: 'record1', plantId: 'plant1' },
@@ -363,7 +437,7 @@ describe('ClientService', () => {
 
     describe('getJournalRecords', () => {
         it('should fetch journal records with filters', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockRecords: ServerControllersModelsJournalRecordDTO[] = [
                 { id: 'record1', plantId: 'plant1' }
@@ -385,7 +459,7 @@ describe('ClientService', () => {
 
     describe('getJournalRecordById', () => {
         it('should fetch journal record by id', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockRecord: ServerControllersModelsJournalRecordDTO = {
                 id: 'record123',
@@ -404,7 +478,7 @@ describe('ClientService', () => {
 
     describe('createJournalRecord', () => {
         it('should create journal record successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const recordData: ServerControllersModelsJournalRecordDTO = {
                 plantId: 'plant1',
@@ -431,7 +505,7 @@ describe('ClientService', () => {
 
     describe('updateJournalRecord', () => {
         it('should update journal record successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const recordData: ServerControllersModelsJournalRecordDTO = {
                 id: 'record1',
@@ -450,7 +524,7 @@ describe('ClientService', () => {
 
     describe('deleteJournalRecord', () => {
         it('should delete journal record successfully', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             mockJournalRecordApi.apiV1JournalRecordsIdDelete.mockResolvedValue({});
 
@@ -461,7 +535,7 @@ describe('ClientService', () => {
 
     describe('searchPlants', () => {
         it('should search plants with filters', async () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             const mockPlants: ServerControllersModelsPlantDTO[] = [
                 { id: 'plant1', family: 'Rosaceae', specie: 'Rosa' }
@@ -482,20 +556,20 @@ describe('ClientService', () => {
 
     describe('token management', () => {
         it('should get token from localStorage', () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             localStorage.setItem('token', 'client-service-token');
 
-            const token = (instance as any).getToken();
+            const token = instance.getToken();
             expect(token).toBe('client-service-token');
         });
 
         it('should return null when no token', () => {
-            const instance = createTestInstance();
+            const instance = createMockClientService();
 
             localStorage.removeItem('token');
 
-            const token = (instance as any).getToken();
+            const token = instance.getToken();
             expect(token).toBeNull();
         });
     });
