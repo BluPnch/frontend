@@ -8,11 +8,13 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx",
     "preview": "vite preview",
-    
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:plant-service": "jest src/__tests__/services/plant-service.test.ts",
+
+    "test": "jest --config jest.config.cjs",
+    "test:watch": "jest --config jest.config.cjs --watch",
+    "test:coverage": "jest --config jest.config.cjs --coverage",
+    "test:plant-service": "jest --config jest.config.cjs src/__tests__/services/plant-service.test.ts",
+    "test:journal-service": "jest --config jest.config.cjs src/__tests__/services/journal-service.test.ts",
+    "test:services": "jest --config jest.config.cjs src/__tests__/services/",
     
     "generate-api": "openapi-generator-cli generate -i ./swagger.yaml -g typescript-axios -o src/api/generated --config openapi-generator-config.json"
   },

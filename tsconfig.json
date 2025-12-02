@@ -29,8 +29,13 @@
       "@styles/*": ["src/styles/*"],
       "@test/*": ["src/test/*"],
       "@__tests__/*": ["src/__tests__/*"]
-    }
+    },
+
+    // Добавьте эти три строки на правильном уровне:
+    "types": ["jest", "node"],
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["src"],
+  "include": ["src", "__tests__"],  // Добавьте __tests__ сюда
   "references": [{ "path": "./tsconfig.node.json" }]
 }
