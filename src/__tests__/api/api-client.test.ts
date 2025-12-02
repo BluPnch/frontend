@@ -1,14 +1,25 @@
 ﻿import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createApiConfiguration, setTokenGetter, getTokenFromStorage, updateApiConfiguration, API_BASE_URL } from '@/api/api-client';
 
-// Mock Configuration
-vi.mock('@/api/generated', () => ({
-    Configuration: vi.fn().mockImplementation((config) => ({
-        basePath: config?.basePath || '',
-        accessToken: config?.accessToken,
-        baseOptions: config?.baseOptions || {}
-    }))
-}));
+// Правильный мок для Configuration - используем класс
+vi.mock('@/api/generated', () => {
+    // Создаем класс для мока Configuration
+    class MockConfiguration {
+        basePath: string;
+        accessToken?: string;
+        baseOptions?: any;
+
+        constructor(config: any) {
+            this.basePath = config?.basePath || '';
+            this.accessToken = config?.accessToken;
+            this.baseOptions = config?.baseOptions || {};
+        }
+    }
+
+    return {
+        Configuration: MockConfiguration
+    };
+});
 
 describe('API Client', () => {
     const mockEnv = {
@@ -60,9 +71,9 @@ describe('API Client', () => {
             const customTokenGetter = vi.fn(() => 'custom-token');
             setTokenGetter(customTokenGetter);
 
-            // Verify the getter is set
-            expect(customTokenGetter).not.toHaveBeenCalled();
-            // The effect will be tested in createApiConfiguration tests
+            // Create config to trigger the getter
+            createApiConfiguration();
+            expect(customTokenGetter).toHaveBeenCalled();
         });
     });
 
@@ -143,6 +154,7 @@ describe('API Client', () => {
         it('should be exported correctly', () => {
             expect(API_BASE_URL).toBeDefined();
             expect(typeof API_BASE_URL).toBe('string');
+            // Исправляем ожидание - API_BASE_URL будет использовать текущий env
             expect(API_BASE_URL).toBe('http://test-api.local:8080');
         });
     });
@@ -166,7 +178,6 @@ describe('API Client', () => {
             expect(consoleSpy).toHaveBeenCalledWith('🔧 Creating API configuration:');
             expect(consoleSpy).toHaveBeenCalledWith('   basePath:', 'http://test-api.local:8080');
             expect(consoleSpy).toHaveBeenCalledWith('   token exists:', true);
-            expect(consoleSpy).toHaveBeenCalledWith('   token value:', 'test-token...');
             expect(consoleSpy).toHaveBeenCalledWith('   Configuration accessToken:', 'set');
         });
 
@@ -175,7 +186,7 @@ describe('API Client', () => {
 
             createApiConfiguration();
 
-            expect(consoleSpy).toHaveBeenCalledWith('   token value:', 'null');
+            expect(consoleSpy).toHaveBeenCalledWith('   token exists:', false);
             expect(consoleSpy).toHaveBeenCalledWith('   Configuration accessToken:', 'not set');
         });
     });

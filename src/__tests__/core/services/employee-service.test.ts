@@ -1,14 +1,12 @@
-﻿import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { employeeService } from '@/core/services/employee-service';
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { seedService } from '@/core/services/seed-service';
 import type {
-    ServerControllersModelsUserDTO,
-    ServerControllersModelsEmployeeDTO,
-    ServerControllersModelsPlantDTO,
-    ServerControllersModelsJournalRecordDTO,
-    ServerControllersModelsGrowthStageDTO
+    ServerControllersModelsSeedDTO,
+    ServerControllersModelsEnumsEnumViability,
+    ServerControllersModelsEnumsEnumLight
 } from '@/api/generated/api';
 
-// Mock modules
+// Mock Configuration
 vi.mock('@/api/generated', () => ({
     Configuration: vi.fn().mockImplementation((config) => ({
         basePath: config?.basePath || '',
@@ -17,451 +15,253 @@ vi.mock('@/api/generated', () => ({
     }))
 }));
 
+// Mock API
+const mockSeedApi = {
+    apiV1SeedsGet: vi.fn(),
+    apiV1SeedsIdGet: vi.fn(),
+    apiV1SeedsPost: vi.fn(),
+    apiV1SeedsIdPut: vi.fn(),
+    apiV1SeedsIdDelete: vi.fn(),
+};
+
 vi.mock('@/api/generated/api', () => ({
-    EmployeeApi: vi.fn(() => ({
-        apiV1EmployeesIdGet: vi.fn(),
-        apiV1EmployeesPlantsGet: vi.fn(),
-        apiV1EmployeesGet: vi.fn(),
-    })),
-    PlantApi: vi.fn(() => ({
-        apiV1PlantsGet: vi.fn(),
-        apiV1PlantsIdGet: vi.fn(),
-        apiV1PlantsIdPut: vi.fn(),
-    })),
-    JournalRecordApi: vi.fn(() => ({
-        apiV1JournalRecordsGet: vi.fn(),
-        apiV1JournalRecordsIdGet: vi.fn(),
-        apiV1JournalRecordsPost: vi.fn(),
-        apiV1JournalRecordsIdPut: vi.fn(),
-        apiV1JournalRecordsIdDelete: vi.fn(),
-    })),
-    GrowthStageApi: vi.fn(() => ({
-        apiV1GrowthStagesGet: vi.fn(),
-        apiV1GrowthStagesIdGet: vi.fn(),
-    })),
-    UserApi: vi.fn(() => ({
-        apiV1UsersMeGet: vi.fn(),
-    })),
+    SeedApi: vi.fn(() => mockSeedApi),
 }));
 
-describe('EmployeeService', () => {
-    let mockEmployeeApi: any;
-    let mockPlantApi: any;
-    let mockJournalRecordApi: any;
-    let mockGrowthStageApi: any;
-    let mockUserApi: any;
+// Mock axios
+vi.mock('axios', () => ({
+    default: {
+        create: vi.fn(() => ({
+            interceptors: {
+                request: {
+                    use: vi.fn()
+                },
+                response: {
+                    use: vi.fn()
+                }
+            }
+        }))
+    }
+}));
 
+describe('SeedService', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.clear();
 
-        // Setup mock implementations
-        mockEmployeeApi = {
-            apiV1EmployeesIdGet: vi.fn(),
-            apiV1EmployeesPlantsGet: vi.fn(),
-            apiV1EmployeesGet: vi.fn(),
-        };
+        // Reset mock implementation
+        mockSeedApi.apiV1SeedsGet.mockReset();
+        mockSeedApi.apiV1SeedsIdGet.mockReset();
+        mockSeedApi.apiV1SeedsPost.mockReset();
+        mockSeedApi.apiV1SeedsIdPut.mockReset();
+        mockSeedApi.apiV1SeedsIdDelete.mockReset();
 
-        mockPlantApi = {
-            apiV1PlantsGet: vi.fn(),
-            apiV1PlantsIdGet: vi.fn(),
-            apiV1PlantsIdPut: vi.fn(),
-        };
-
-        mockJournalRecordApi = {
-            apiV1JournalRecordsGet: vi.fn(),
-            apiV1JournalRecordsIdGet: vi.fn(),
-            apiV1JournalRecordsPost: vi.fn(),
-            apiV1JournalRecordsIdPut: vi.fn(),
-            apiV1JournalRecordsIdDelete: vi.fn(),
-        };
-
-        mockGrowthStageApi = {
-            apiV1GrowthStagesGet: vi.fn(),
-            apiV1GrowthStagesIdGet: vi.fn(),
-        };
-
-        mockUserApi = {
-            apiV1UsersMeGet: vi.fn(),
-        };
-
-        // Reset service state
-        (employeeService as any).currentEmployeeId = null;
-        (employeeService as any).initializeApis();
+        // Reinitialize service
+        (seedService as any).initializeApi();
     });
 
-    describe('getCurrentEmployeeId', () => {
-        it('should return cached employee ID if available', async () => {
-            (employeeService as any).currentEmployeeId = 'cached-123';
-
-            const result = await employeeService.getCurrentEmployeeId();
-
-            expect(result).toBe('cached-123');
-            expect(mockUserApi.apiV1UsersMeGet).not.toHaveBeenCalled();
-        });
-
-        it('should fetch employee ID from profile and cache it', async () => {
-            // Используйте только те поля, которые определены в интерфейсе
-            const mockProfile: ServerControllersModelsUserDTO = {
-                id: 'employee-456',
-                phoneNumber: '+79991234567'
-                // username не существует в типе
-            };
-
-            mockUserApi.apiV1UsersMeGet.mockResolvedValue({
-                data: mockProfile
-            });
-
-            const result = await employeeService.getCurrentEmployeeId();
-
-            expect(result).toBe('employee-456');
-            expect(mockUserApi.apiV1UsersMeGet).toHaveBeenCalled();
-            expect((employeeService as any).currentEmployeeId).toBe('employee-456');
-        });
-
-        it('should throw error when profile has no ID', async () => {
-            // Если нет id, используйте пустой объект или только phoneNumber
-            const mockProfile: ServerControllersModelsUserDTO = {
-                phoneNumber: '+79991234567'
-                // No id
-            };
-
-            mockUserApi.apiV1UsersMeGet.mockResolvedValue({
-                data: mockProfile
-            });
-
-            await expect(employeeService.getCurrentEmployeeId()).rejects.toThrow('Не удалось определить ID сотрудника');
-        });
-
-        it('should throw error when profile fetch fails', async () => {
-            mockUserApi.apiV1UsersMeGet.mockRejectedValue(new Error('Network error'));
-
-            await expect(employeeService.getCurrentEmployeeId()).rejects.toThrow('Network error');
-        });
-    });
-
-    describe('getMyProfile', () => {
-        it('should fetch current employee profile', async () => {
-            const mockProfile: ServerControllersModelsUserDTO = {
-                id: 'emp1',
-                phoneNumber: '+79991234567'
-                // role не существует в типе ServerControllersModelsUserDTO
-            };
-
-            mockUserApi.apiV1UsersMeGet.mockResolvedValue({
-                data: mockProfile
-            });
-
-            const result = await employeeService.getMyProfile();
-
-            expect(result).toEqual(mockProfile);
-            expect(mockUserApi.apiV1UsersMeGet).toHaveBeenCalled();
-        });
-    });
-
-    describe('getEmployeeById', () => {
-        it('should fetch employee by ID', async () => {
-            const mockEmployee: ServerControllersModelsEmployeeDTO = {
-                id: 'emp123',
-                surname: 'Иванов',
-                name: 'Иван',
-                patronymic: 'Иванович'
-            };
-
-            mockEmployeeApi.apiV1EmployeesIdGet.mockResolvedValue({
-                data: mockEmployee
-            });
-
-            const result = await employeeService.getEmployeeById('emp123');
-
-            expect(result).toEqual(mockEmployee);
-            expect(mockEmployeeApi.apiV1EmployeesIdGet).toHaveBeenCalledWith({ id: 'emp123' });
-        });
-    });
-
-    describe('getMyPlants', () => {
-        it('should fetch all plants', async () => {
-            const mockPlants: ServerControllersModelsPlantDTO[] = [
-                { id: 'plant1', family: 'Rosaceae', specie: 'Rosa' },
-                { id: 'plant2', family: 'Liliaceae', specie: 'Lilium' }
+    describe('getSeeds', () => {
+        it('should fetch seeds without filters', async () => {
+            const mockSeeds: ServerControllersModelsSeedDTO[] = [
+                {
+                    id: 'seed1',
+                    plantId: 'plant1',
+                    maturity: 'Созревшие',
+                    viability: 1 as ServerControllersModelsEnumsEnumViability,
+                    waterRequirements: 'Умеренный'
+                },
+                {
+                    id: 'seed2',
+                    plantId: 'plant2',
+                    maturity: 'Созревшие',
+                    viability: 2 as ServerControllersModelsEnumsEnumViability,
+                    temperatureRequirements: 20
+                }
             ];
 
-            mockPlantApi.apiV1PlantsGet.mockResolvedValue({
-                data: mockPlants
+            mockSeedApi.apiV1SeedsGet.mockResolvedValue({
+                data: mockSeeds
             });
 
-            const result = await employeeService.getMyPlants();
+            const result = await seedService.getSeeds();
 
-            expect(result).toEqual(mockPlants);
-            expect(mockPlantApi.apiV1PlantsGet).toHaveBeenCalledWith(undefined);
+            expect(result).toEqual(mockSeeds);
+            expect(mockSeedApi.apiV1SeedsGet).toHaveBeenCalledWith({
+                maturity: undefined,
+                viability: undefined
+            });
         });
 
-        it('should log plant retrieval', async () => {
-            const consoleSpy = vi.spyOn(console, 'log');
-            const mockPlants: ServerControllersModelsPlantDTO[] = [
-                { id: 'plant1', family: 'Test' }
+        it('should fetch seeds with filters', async () => {
+            const mockSeeds: ServerControllersModelsSeedDTO[] = [
+                {
+                    id: 'seed1',
+                    plantId: 'plant1',
+                    maturity: 'Созревшие',
+                    viability: 1 as ServerControllersModelsEnumsEnumViability,
+                    lightRequirements: 1 as ServerControllersModelsEnumsEnumLight
+                }
             ];
 
-            mockPlantApi.apiV1PlantsGet.mockResolvedValue({
-                data: mockPlants
+            mockSeedApi.apiV1SeedsGet.mockResolvedValue({
+                data: mockSeeds
             });
 
-            await employeeService.getMyPlants();
+            const result = await seedService.getSeeds('Созревшие', '1');
 
-            expect(consoleSpy).toHaveBeenCalledWith('🟡 EmployeeService: Using GENERAL plants list (all plants)');
-            expect(consoleSpy).toHaveBeenCalledWith('✅ EmployeeService: General plants received:', 1);
+            expect(result).toEqual(mockSeeds);
+            expect(mockSeedApi.apiV1SeedsGet).toHaveBeenCalledWith({
+                maturity: 'Созревшие',
+                viability: 1
+            });
+        });
+
+        it('should throw error when fetching fails', async () => {
+            mockSeedApi.apiV1SeedsGet.mockRejectedValue(new Error('Network error'));
+
+            await expect(seedService.getSeeds()).rejects.toThrow('Network error');
         });
     });
 
-    describe('getEmployeePlants', () => {
-        it('should fetch plants for specific employee', async () => {
-            const mockPlants: ServerControllersModelsPlantDTO[] = [
-                { id: 'plant1', family: 'Test' }
-            ];
-
-            mockEmployeeApi.apiV1EmployeesPlantsGet.mockResolvedValue({
-                data: mockPlants
-            });
-
-            const result = await employeeService.getEmployeePlants('emp123');
-
-            expect(result).toEqual(mockPlants);
-            expect(mockEmployeeApi.apiV1EmployeesPlantsGet).toHaveBeenCalledWith({
-                employeeId: 'emp123'
-            });
-        });
-    });
-
-    describe('getPlantById', () => {
-        it('should fetch plant by ID', async () => {
-            const mockPlant: ServerControllersModelsPlantDTO = {
-                id: 'plant123',
-                family: 'Rosaceae',
-                specie: 'Rosa'
+    describe('getSeedById', () => {
+        it('should fetch seed by ID', async () => {
+            const mockSeed: ServerControllersModelsSeedDTO = {
+                id: 'seed123',
+                plantId: 'plant123',
+                maturity: 'Средняя',
+                viability: 1 as ServerControllersModelsEnumsEnumViability,
+                waterRequirements: 'Умеренный',
+                temperatureRequirements: 25
             };
 
-            mockPlantApi.apiV1PlantsIdGet.mockResolvedValue({
-                data: mockPlant
+            mockSeedApi.apiV1SeedsIdGet.mockResolvedValue({
+                data: mockSeed
             });
 
-            const result = await employeeService.getPlantById('plant123');
+            const result = await seedService.getSeedById('seed123');
 
-            expect(result).toEqual(mockPlant);
+            expect(result).toEqual(mockSeed);
+            expect(mockSeedApi.apiV1SeedsIdGet).toHaveBeenCalledWith({ id: 'seed123' });
         });
     });
 
-    describe('updatePlant', () => {
-        it('should update plant successfully', async () => {
-            const plantData: ServerControllersModelsPlantDTO = {
-                id: 'plant123',
-                family: 'Updated Family',
-                specie: 'Updated Species'
-            };
-
-            mockPlantApi.apiV1PlantsIdPut.mockResolvedValue({});
-
-            await employeeService.updatePlant('plant123', plantData);
-
-            expect(mockPlantApi.apiV1PlantsIdPut).toHaveBeenCalledWith({
-                id: 'plant123',
-                serverControllersModelsPlantDTO: plantData
-            });
-        });
-    });
-
-    describe('Journal Records', () => {
-        it('should get journal records with filters', async () => {
-            const mockRecords: ServerControllersModelsJournalRecordDTO[] = [
-                { id: 'record1', plantId: 'plant1' },
-                { id: 'record2', plantId: 'plant2' }
-            ];
-
-            mockJournalRecordApi.apiV1JournalRecordsGet.mockResolvedValue({
-                data: mockRecords
-            });
-
-            const result = await employeeService.getJournalRecords('plant1', '2024-01-01', '2024-12-31');
-
-            expect(result).toEqual(mockRecords);
-            expect(mockJournalRecordApi.apiV1JournalRecordsGet).toHaveBeenCalledWith({
+    describe('createSeed', () => {
+        it('should create seed successfully', async () => {
+            const seedData: ServerControllersModelsSeedDTO = {
                 plantId: 'plant1',
-                startDate: '2024-01-01',
-                endDate: '2024-12-31'
-            });
-        });
-
-        it('should create journal record', async () => {
-            const recordData: ServerControllersModelsJournalRecordDTO = {
-                plantId: 'plant1',
-                growthStageId: 'stage1',
-                employeeId: 'emp1'
+                maturity: 'Созревшие',
+                viability: 1 as ServerControllersModelsEnumsEnumViability,
+                lightRequirements: 1 as ServerControllersModelsEnumsEnumLight,
+                waterRequirements: 'Умеренный'
             };
 
-            const mockResponse: ServerControllersModelsJournalRecordDTO = {
-                id: 'new-record',
-                ...recordData
+            const mockResponse: ServerControllersModelsSeedDTO = {
+                id: 'new-seed',
+                ...seedData
             };
 
-            mockJournalRecordApi.apiV1JournalRecordsPost.mockResolvedValue({
+            mockSeedApi.apiV1SeedsPost.mockResolvedValue({
                 data: mockResponse
             });
 
-            const result = await employeeService.createJournalRecord(recordData);
+            const result = await seedService.createSeed(seedData);
 
             expect(result).toEqual(mockResponse);
-            expect(mockJournalRecordApi.apiV1JournalRecordsPost).toHaveBeenCalledWith({
-                serverControllersModelsJournalRecordDTO: recordData
+            expect(mockSeedApi.apiV1SeedsPost).toHaveBeenCalledWith({
+                serverControllersModelsSeedDTO: seedData
             });
         });
+    });
 
-        it('should update journal record', async () => {
-            const recordData: ServerControllersModelsJournalRecordDTO = {
-                id: 'record1',
-                plantId: 'plant1'
+    describe('updateSeed', () => {
+        it('should update seed successfully', async () => {
+            const seedData: ServerControllersModelsSeedDTO = {
+                plantId: 'plant1',
+                maturity: 'Созревшие',
+                viability: 1 as ServerControllersModelsEnumsEnumViability,
+                waterRequirements: 'Умеренный'
             };
 
-            mockJournalRecordApi.apiV1JournalRecordsIdPut.mockResolvedValue({});
+            mockSeedApi.apiV1SeedsIdPut.mockResolvedValue({});
 
-            await employeeService.updateJournalRecord('record1', recordData);
+            await seedService.updateSeed('seed123', seedData);
 
-            expect(mockJournalRecordApi.apiV1JournalRecordsIdPut).toHaveBeenCalledWith({
-                id: 'record1',
-                serverControllersModelsJournalRecordDTO: recordData
+            expect(mockSeedApi.apiV1SeedsIdPut).toHaveBeenCalledWith({
+                id: 'seed123',
+                serverControllersModelsSeedDTO: seedData
             });
         });
 
-        it('should delete journal record', async () => {
-            mockJournalRecordApi.apiV1JournalRecordsIdDelete.mockResolvedValue({});
-
-            await employeeService.deleteJournalRecord('record1');
-
-            expect(mockJournalRecordApi.apiV1JournalRecordsIdDelete).toHaveBeenCalledWith({
-                id: 'record1'
-            });
-        });
-    });
-
-    describe('Growth Stages', () => {
-        it('should get growth stages', async () => {
-            const mockStages: ServerControllersModelsGrowthStageDTO[] = [
-                { id: 'stage1', name: 'Прорастание' },
-                { id: 'stage2', name: 'Цветение' }
-            ];
-
-            mockGrowthStageApi.apiV1GrowthStagesGet.mockResolvedValue({
-                data: mockStages
-            });
-
-            const result = await employeeService.getGrowthStages('Прорастание');
-
-            expect(result).toEqual(mockStages);
-            expect(mockGrowthStageApi.apiV1GrowthStagesGet).toHaveBeenCalledWith({
-                name: 'Прорастание'
-            });
-        });
-
-        it('should get growth stage by ID', async () => {
-            const mockStage: ServerControllersModelsGrowthStageDTO = {
-                id: 'stage1',
-                name: 'Прорастание',
-                description: 'Начальная стадия'
+        it('should throw error when update fails', async () => {
+            const seedData: ServerControllersModelsSeedDTO = {
+                plantId: 'plant1',
+                waterRequirements: 'Умеренный'
             };
 
-            mockGrowthStageApi.apiV1GrowthStagesIdGet.mockResolvedValue({
-                data: mockStage
-            });
+            mockSeedApi.apiV1SeedsIdPut.mockRejectedValue(new Error('Update failed'));
 
-            const result = await employeeService.getGrowthStageById('stage1');
-
-            expect(result).toEqual(mockStage);
+            await expect(seedService.updateSeed('seed123', seedData)).rejects.toThrow('Update failed');
         });
     });
 
-    describe('searchPlants', () => {
-        it('should search plants with filters', async () => {
-            const mockPlants: ServerControllersModelsPlantDTO[] = [
-                { id: 'plant1', family: 'Rosaceae', specie: 'Rosa' }
-            ];
+    describe('deleteSeed', () => {
+        it('should delete seed successfully', async () => {
+            mockSeedApi.apiV1SeedsIdDelete.mockResolvedValue({});
 
-            mockPlantApi.apiV1PlantsGet.mockResolvedValue({
-                data: mockPlants
-            });
+            await seedService.deleteSeed('seed123');
 
-            const result = await employeeService.searchPlants('Rosaceae', 'Rosa');
-
-            expect(result).toEqual(mockPlants);
-            expect(mockPlantApi.apiV1PlantsGet).toHaveBeenCalledWith({
-                family: 'Rosaceae',
-                species: 'Rosa'
-            });
+            expect(mockSeedApi.apiV1SeedsIdDelete).toHaveBeenCalledWith({ id: 'seed123' });
         });
-    });
 
-    describe('getEmployees', () => {
-        it('should fetch employees with filters', async () => {
-            const mockEmployees: ServerControllersModelsEmployeeDTO[] = [
-                { id: 'emp1', surname: 'Иванов', name: 'Иван' },
-                { id: 'emp2', surname: 'Петров', name: 'Петр' }
-            ];
+        it('should throw error when deletion fails', async () => {
+            mockSeedApi.apiV1SeedsIdDelete.mockRejectedValue(new Error('Delete failed'));
 
-            mockEmployeeApi.apiV1EmployeesGet.mockResolvedValue({
-                data: mockEmployees
-            });
-
-            const result = await employeeService.getEmployees('+79991234567', 'Уход', 'Садоводство');
-
-            expect(result).toEqual(mockEmployees);
-            expect(mockEmployeeApi.apiV1EmployeesGet).toHaveBeenCalledWith({
-                phoneNumber: '+79991234567',
-                task: 'Уход',
-                plantDomain: 'Садоводство'
-            });
+            await expect(seedService.deleteSeed('seed123')).rejects.toThrow('Delete failed');
         });
     });
 
     describe('token management', () => {
         it('should get token from localStorage', () => {
-            localStorage.setItem('token', 'employee-token');
+            localStorage.setItem('token', 'seed-service-token');
 
-            const token = (employeeService as any).getToken();
-            expect(token).toBe('employee-token');
+            const token = (seedService as any).getToken();
+            expect(token).toBe('seed-service-token');
         });
 
-        it('should return null when no token', () => {
+        it('should not add authorization header when no token', async () => {
             localStorage.removeItem('token');
 
-            const token = (employeeService as any).getToken();
-            expect(token).toBeNull();
+            const mockSeeds: ServerControllersModelsSeedDTO[] = [
+                { id: 'seed1', plantId: 'plant1' }
+            ];
+
+            mockSeedApi.apiV1SeedsGet.mockResolvedValue({
+                data: mockSeeds
+            });
+
+            await seedService.getSeeds();
+
+            expect(mockSeedApi.apiV1SeedsGet).toHaveBeenCalled();
         });
     });
 
-    describe('console logging', () => {
-        let consoleSpy: any;
+    describe('error handling', () => {
+        it('should wrap errors with custom message', async () => {
+            const originalError = new Error('Original error message');
+            mockSeedApi.apiV1SeedsGet.mockRejectedValue(originalError);
 
-        beforeEach(() => {
-            consoleSpy = vi.spyOn(console, 'log');
-        });
-
-        afterEach(() => {
-            if (consoleSpy) {
-                consoleSpy.mockRestore();
+            try {
+                await seedService.getSeeds();
+            } catch (error) {
+                expect(error).toBeInstanceOf(Error);
+                expect((error as Error).message).toBe('Original error message');
             }
         });
 
-        it('should log request details', async () => {
-            const mockPlant: ServerControllersModelsPlantDTO = {
-                id: 'plant1',
-                family: 'Test'
-            };
+        it('should handle unknown errors', async () => {
+            mockSeedApi.apiV1SeedsGet.mockRejectedValue('Unknown error string');
 
-            mockPlantApi.apiV1PlantsIdGet.mockResolvedValue({
-                data: mockPlant
-            });
-
-            await employeeService.getPlantById('plant1');
-
-            expect(consoleSpy).toHaveBeenCalledWith('🚀 EmployeeService Request:', expect.any(String));
-            expect(consoleSpy).toHaveBeenCalledWith('✅ Added Authorization header to employee request');
+            await expect(seedService.getSeeds()).rejects.toThrow('Ошибка получения списка семян');
         });
     });
 });

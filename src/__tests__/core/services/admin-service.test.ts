@@ -13,7 +13,14 @@ vi.mock('@/api/generated', () => ({
     Configuration: vi.fn().mockImplementation((config) => ({
         basePath: config?.basePath || '',
         accessToken: config?.accessToken,
-        baseOptions: config?.baseOptions || {}
+        baseOptions: config?.baseOptions || {},
+        isJsonMime: vi.fn(() => true),
+        get apiKey() { return undefined; },
+        set apiKey(value: string | undefined) {},
+        get username() { return undefined; },
+        set username(value: string | undefined) {},
+        get password() { return undefined; },
+        set password(value: string | undefined) {}
     }))
 }));
 
@@ -75,12 +82,31 @@ describe('AdminService', () => {
             apiV1UsersGet: vi.fn(),
         };
 
-        // Reinitialize service
-        (adminService as any).initializeApis();
+        // Set mock implementations
+        (require('@/api/generated/api').AdministratorApi as any).mockImplementation(() => mockAdministratorApi);
+        (require('@/api/generated/api').ClientApi as any).mockImplementation(() => mockClientApi);
+        (require('@/api/generated/api').EmployeeApi as any).mockImplementation(() => mockEmployeeApi);
+        (require('@/api/generated/api').UserApi as any).mockImplementation(() => mockUserApi);
     });
 
+    // Создаем тестовый экземпляр
+    const createTestInstance = () => {
+        const AdminService = require('@/core/services/admin-service').AdminService;
+        const instance = new AdminService();
+
+        // Подменяем API на моки
+        (instance as any).administratorApi = mockAdministratorApi;
+        (instance as any).clientApi = mockClientApi;
+        (instance as any).employeeApi = mockEmployeeApi;
+        (instance as any).userApi = mockUserApi;
+
+        return instance;
+    };
+
     describe('getAdministrators', () => {
+        const instance = createTestInstance();
         it('should fetch administrators successfully', async () => {
+            const instance = createTestInstance();
             const mockAdmins: ServerControllersModelsAdministratorDTO[] = [
                 { id: '1', surname: 'Иванов', name: 'Иван', patronymic: 'Иванович' },
                 { id: '2', surname: 'Петров', name: 'Петр', patronymic: 'Петрович' }
@@ -90,7 +116,7 @@ describe('AdminService', () => {
                 data: mockAdmins
             });
 
-            const result = await adminService.getAdministrators();
+            const result = await instance.getAdministrators();
 
             expect(result).toEqual(mockAdmins);
             expect(mockAdministratorApi.apiV1AdministratorsGet).toHaveBeenCalledWith({
@@ -110,7 +136,7 @@ describe('AdminService', () => {
                 data: mockAdmins
             });
 
-            const result = await adminService.getAdministrators(
+            const result = await instance.getAdministrators(
                 'Иванов',
                 'Иван',
                 'Иванович',
@@ -130,11 +156,12 @@ describe('AdminService', () => {
             const error = new Error('Network error');
             mockAdministratorApi.apiV1AdministratorsGet.mockRejectedValue(error);
 
-            await expect(adminService.getAdministrators()).rejects.toThrow('Network error');
+            await expect(instance.getAdministrators()).rejects.toThrow('Network error');
         });
     });
 
     describe('getAdministratorById', () => {
+        const instance = createTestInstance();
         it('should fetch administrator by id', async () => {
             const mockAdmin: ServerControllersModelsAdministratorDTO = {
                 id: '123',
@@ -146,7 +173,7 @@ describe('AdminService', () => {
                 data: mockAdmin
             });
 
-            const result = await adminService.getAdministratorById('123');
+            const result = await instance.getAdministratorById('123');
 
             expect(result).toEqual(mockAdmin);
             expect(mockAdministratorApi.apiV1AdministratorsIdGet).toHaveBeenCalledWith({ id: '123' });
@@ -154,6 +181,7 @@ describe('AdminService', () => {
     });
 
     describe('createAdministrator', () => {
+        const instance = createTestInstance();
         it('should create administrator successfully', async () => {
             const adminData: ServerControllersModelsCreateAdministratorRequestDto = {
                 surname: 'Иванов',
@@ -171,7 +199,7 @@ describe('AdminService', () => {
                 data: mockResponse
             });
 
-            const result = await adminService.createAdministrator(adminData);
+            const result = await instance.createAdministrator(adminData);
 
             expect(result).toEqual(mockResponse);
             expect(mockAdministratorApi.apiV1AdministratorsPost).toHaveBeenCalledWith({
@@ -181,6 +209,7 @@ describe('AdminService', () => {
     });
 
     describe('getClients', () => {
+        const instance = createTestInstance();
         it('should fetch clients successfully', async () => {
             const mockClients: ServerControllersModelsClientDTO[] = [
                 { id: '1', companyName: 'Компания 1' },
@@ -191,7 +220,7 @@ describe('AdminService', () => {
                 data: mockClients
             });
 
-            const result = await adminService.getClients();
+            const result = await instance.getClients();
 
             expect(result).toEqual(mockClients);
         });
@@ -205,7 +234,7 @@ describe('AdminService', () => {
                 data: mockClients
             });
 
-            const result = await adminService.getClients('Тестовая компания', '+79991234567');
+            const result = await instance.getClients('Тестовая компания', '+79991234567');
 
             expect(result).toEqual(mockClients);
             expect(mockClientApi.apiV1ClientsGet).toHaveBeenCalledWith({
@@ -216,6 +245,7 @@ describe('AdminService', () => {
     });
 
     describe('getClientById', () => {
+        const instance = createTestInstance();
         it('should fetch client by id', async () => {
             const mockClient: ServerControllersModelsClientDTO = {
                 id: '123',
@@ -226,13 +256,14 @@ describe('AdminService', () => {
                 data: mockClient
             });
 
-            const result = await adminService.getClientById('123');
+            const result = await instance.getClientById('123');
 
             expect(result).toEqual(mockClient);
         });
     });
 
     describe('updateUserRole', () => {
+        const instance = createTestInstance();
         it('should update user role successfully', async () => {
             const mockResponse = {
                 id: '123',
@@ -243,7 +274,7 @@ describe('AdminService', () => {
                 data: mockResponse
             });
 
-            const result = await adminService.updateUserRole('123', 1);
+            const result = await instance.updateUserRole('123', 1);
 
             expect(result).toEqual(mockResponse);
             expect(mockClientApi.apiV1ClientsClientIdRolePatch).toHaveBeenCalledWith({
@@ -254,6 +285,7 @@ describe('AdminService', () => {
     });
 
     describe('getEmployees', () => {
+        const instance = createTestInstance();
         it('should fetch employees successfully', async () => {
             const mockEmployees: ServerControllersModelsEmployeeDTO[] = [
                 { id: '1', surname: 'Сидоров', name: 'Сидор' },
@@ -264,13 +296,14 @@ describe('AdminService', () => {
                 data: mockEmployees
             });
 
-            const result = await adminService.getEmployees();
+            const result = await instance.getEmployees();
 
             expect(result).toEqual(mockEmployees);
         });
     });
 
     describe('getEmployeePlants', () => {
+        const instance = createTestInstance();
         it('should fetch employee plants', async () => {
             const mockPlants = [
                 { id: '1', name: 'Растение 1' },
@@ -281,7 +314,7 @@ describe('AdminService', () => {
                 data: mockPlants
             });
 
-            const result = await adminService.getEmployeePlants('emp123');
+            const result = await instance.getEmployeePlants('emp123');
 
             expect(result).toEqual(mockPlants);
             expect(mockEmployeeApi.apiV1EmployeesPlantsGet).toHaveBeenCalledWith({
@@ -291,6 +324,7 @@ describe('AdminService', () => {
     });
 
     describe('getClientJournalRecords', () => {
+        const instance = createTestInstance();
         it('should fetch client journal records', async () => {
             const mockRecords = [
                 { id: '1', action: 'Полив' },
@@ -301,13 +335,14 @@ describe('AdminService', () => {
                 data: mockRecords
             });
 
-            const result = await adminService.getClientJournalRecords();
+            const result = await instance.getClientJournalRecords();
 
             expect(result).toEqual(mockRecords);
         });
     });
 
     describe('getAllUsers', () => {
+        const instance = createTestInstance();
         it('should fetch all users', async () => {
             const mockUsers = [
                 { id: '1', username: 'admin' },
@@ -318,31 +353,33 @@ describe('AdminService', () => {
                 data: mockUsers
             });
 
-            const result = await adminService.getAllUsers();
+            const result = await instance.getAllUsers();
 
             expect(result).toEqual(mockUsers);
         });
     });
 
     describe('deleteUser', () => {
+        const instance = createTestInstance();
         it('should throw error as method is not implemented', async () => {
-            await expect(adminService.deleteUser('123')).rejects.toThrow('Метод удаления пользователя не реализован');
+            await expect(instance.deleteUser('123')).rejects.toThrow('Метод удаления пользователя не реализован');
         });
     });
 
     describe('token management', () => {
+        const instance = createTestInstance();
         it('should get token from localStorage', () => {
             localStorage.setItem('token', 'test-token-123');
 
             // Access private method via any for testing
-            const token = (adminService as any).getToken();
+            const token = (instance as any).getToken();
             expect(token).toBe('test-token-123');
         });
 
         it('should return null when no token', () => {
             localStorage.removeItem('token');
 
-            const token = (adminService as any).getToken();
+            const token = (instance as any).getToken();
             expect(token).toBeNull();
         });
     });

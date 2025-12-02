@@ -26,7 +26,11 @@ vi.mock('@/pages/ClientDashboard/ClientDashboard', () => ({
     ClientDashboard: () => <div data-testid="client-dashboard-page">Client Dashboard Page</div>
 }));
 
-vi.mock('@/core/services/user-service');
+vi.mock('@/core/services/user-service', () => ({
+    userService: {
+        isAuthenticated: vi.fn()
+    }
+}));
 
 describe('AppRouter', () => {
     beforeEach(() => {
@@ -36,7 +40,7 @@ describe('AppRouter', () => {
 
     describe('authentication flow', () => {
         it('should redirect authenticated users from login to dashboard', () => {
-            (userService.isAuthenticated as any).mockReturnValue(true);
+            vi.mocked(userService.isAuthenticated).mockReturnValue(true);
 
             render(
                 <MemoryRouter initialEntries={['/login']}>
@@ -50,7 +54,7 @@ describe('AppRouter', () => {
         });
 
         it('should show login page for unauthenticated users', () => {
-            (userService.isAuthenticated as any).mockReturnValue(false);
+            vi.mocked(userService.isAuthenticated).mockReturnValue(false);
 
             render(
                 <MemoryRouter initialEntries={['/login']}>
@@ -63,7 +67,7 @@ describe('AppRouter', () => {
         });
 
         it('should redirect root path to dashboard', () => {
-            (userService.isAuthenticated as any).mockReturnValue(true);
+            vi.mocked(userService.isAuthenticated).mockReturnValue(true);
 
             render(
                 <MemoryRouter initialEntries={['/']}>
