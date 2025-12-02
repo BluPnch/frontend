@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { Login } from '../pages/Login/Login';
 import { Dashboard } from '../pages/Dashboard/Dashboard';
 import { AdminDashboard } from '../pages/AdminDashboard/AdminDashboard';
@@ -10,7 +11,7 @@ import { userService } from '../core/services/user-service';
 
 export const AppRouter: React.FC = () => {
     return (
-        <BrowserRouter>
+        <MemoryRouter>
             <Routes>
                 <Route
                     path="/login"
@@ -48,6 +49,6 @@ export const AppRouter: React.FC = () => {
 
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
-        </BrowserRouter>
+        </MemoryRouter>
     );
 };
