@@ -9,22 +9,35 @@ import type {
 } from '@/api/generated/api';
 
 // Mock modules
-vi.mock('@/api/generated/api', () => import('../../__mocks__/api'));
+vi.mock('@/api/generated', () => ({
+    Configuration: vi.fn().mockImplementation((config) => ({
+        basePath: config?.basePath || '',
+        accessToken: config?.accessToken,
+        baseOptions: config?.baseOptions || {}
+    }))
+}));
 
-
-vi.mock('axios', () => ({
-    default: {
-        create: vi.fn(() => ({
-            interceptors: {
-                request: {
-                    use: vi.fn()
-                },
-                response: {
-                    use: vi.fn()
-                }
-            }
-        }))
-    }
+vi.mock('@/api/generated/api', () => ({
+    AdministratorApi: vi.fn(() => ({
+        apiV1AdministratorsGet: vi.fn(),
+        apiV1AdministratorsIdGet: vi.fn(),
+        apiV1AdministratorsPost: vi.fn(),
+    })),
+    ClientApi: vi.fn(() => ({
+        apiV1ClientsGet: vi.fn(),
+        apiV1ClientsIdGet: vi.fn(),
+        apiV1ClientsClientIdRolePatch: vi.fn(),
+        apiV1ClientsJournalRecordsGet: vi.fn(),
+        apiV1ClientsPlantsGet: vi.fn(),
+    })),
+    EmployeeApi: vi.fn(() => ({
+        apiV1EmployeesGet: vi.fn(),
+        apiV1EmployeesIdGet: vi.fn(),
+        apiV1EmployeesPlantsGet: vi.fn(),
+    })),
+    UserApi: vi.fn(() => ({
+        apiV1UsersGet: vi.fn(),
+    })),
 }));
 
 describe('AdminService', () => {

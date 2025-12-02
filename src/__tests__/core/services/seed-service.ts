@@ -8,21 +8,22 @@ import type {
 } from '@/api/generated/api';
 
 
-vi.mock('@/api/generated/api', () => import('../../__mocks__/api'));
+vi.mock('@/api/generated', () => ({
+    Configuration: vi.fn().mockImplementation((config) => ({
+        basePath: config?.basePath || '',
+        accessToken: config?.accessToken,
+        baseOptions: config?.baseOptions || {}
+    }))
+}));
 
-vi.mock('axios', () => ({
-    default: {
-        create: vi.fn(() => ({
-            interceptors: {
-                request: {
-                    use: vi.fn()
-                },
-                response: {
-                    use: vi.fn()
-                }
-            }
-        }))
-    }
+vi.mock('@/api/generated/api', () => ({
+    SeedApi: vi.fn(() => ({
+        apiV1SeedsGet: vi.fn(),
+        apiV1SeedsIdGet: vi.fn(),
+        apiV1SeedsPost: vi.fn(),
+        apiV1SeedsIdPut: vi.fn(),
+        apiV1SeedsIdDelete: vi.fn(),
+    })),
 }));
 
 describe('SeedService', () => {

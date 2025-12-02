@@ -1,18 +1,20 @@
 ﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { userService } from '@/core/services/user-service';
 
-vi.mock('@/api/generated/api', () => import('../../__mocks__/api'));
-
-vi.mock('axios', () => ({
-    default: {
-        create: vi.fn(() => ({
-            interceptors: {
-                request: { use: vi.fn() },
-                response: { use: vi.fn() }
-            }
-        }))
-    }
+vi.mock('@/api/generated', () => ({
+    Configuration: vi.fn().mockImplementation((config) => ({
+        basePath: config?.basePath || '',
+        accessToken: config?.accessToken,
+        baseOptions: config?.baseOptions || {}
+    }))
 }));
+
+vi.mock('@/api/generated/api', () => ({
+    AuthApi: vi.fn(() => ({
+        apiV1AuthLoginPost: vi.fn(),
+    })),
+}));
+
 
 describe('UserService', () => {
     beforeEach(() => {

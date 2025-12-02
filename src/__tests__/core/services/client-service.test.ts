@@ -5,17 +5,26 @@ import type {
 } from '@/api/generated/api';
 
 // Mock modules
-vi.mock('@/api/generated/api', () => import('../../__mocks__/api'));
+vi.mock('@/api/generated', () => ({
+    Configuration: vi.fn().mockImplementation((config) => ({
+        basePath: config?.basePath || '',
+        accessToken: config?.accessToken,
+        baseOptions: config?.baseOptions || {}
+    }))
+}));
 
-vi.mock('axios', () => ({
-    default: {
-        create: vi.fn(() => ({
-            interceptors: {
-                request: { use: vi.fn() },
-                response: { use: vi.fn() }
-            }
-        }))
-    }
+vi.mock('@/api/generated/api', () => ({
+    UserApi: vi.fn(() => ({
+        apiV1UsersMeGet: vi.fn(),
+    })),
+    PlantApi: vi.fn(() => ({
+        apiV1PlantsGet: vi.fn(),
+        apiV1PlantsIdGet: vi.fn(),
+    })),
+    JournalRecordApi: vi.fn(() => ({
+        apiV1JournalRecordsGet: vi.fn(),
+        apiV1JournalRecordsPost: vi.fn(),
+    })),
 }));
 
 describe('ClientService', () => {

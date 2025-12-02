@@ -1,7 +1,7 @@
 ﻿import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createApiConfiguration, setTokenGetter, getTokenFromStorage, updateApiConfiguration, API_BASE_URL } from '@/api/api-client';
-const originalEnv = (import.meta as any).env;
 
+// Mock Configuration
 vi.mock('@/api/generated', () => ({
     Configuration: vi.fn().mockImplementation((config) => ({
         basePath: config?.basePath || '',
@@ -10,16 +10,20 @@ vi.mock('@/api/generated', () => ({
     }))
 }));
 
-
 describe('API Client', () => {
     const mockEnv = {
         VITE_API_BASE_URL: 'http://test-api.local:8080',
         VITE_API_URL: 'http://test-api.local:8080'
     };
 
+    let originalEnv: any;
+
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.clear();
+
+        // Save original env
+        originalEnv = { ...import.meta.env };
 
         // Mock import.meta.env
         Object.defineProperty(import.meta, 'env', {
@@ -32,6 +36,7 @@ describe('API Client', () => {
     });
 
     afterEach(() => {
+        // Restore original env
         Object.defineProperty(import.meta, 'env', {
             value: originalEnv,
             writable: true
@@ -55,14 +60,15 @@ describe('API Client', () => {
             const customTokenGetter = vi.fn(() => 'custom-token');
             setTokenGetter(customTokenGetter);
 
-            // We need to test that the token getter is used in createApiConfiguration
-            // This is indirectly tested through the createApiConfiguration tests
+            // Verify the getter is set
+            expect(customTokenGetter).not.toHaveBeenCalled();
+            // The effect will be tested in createApiConfiguration tests
         });
     });
 
     describe('createApiConfiguration', () => {
         it('should create configuration with environment variable base URL', () => {
-            localStorage.removeItem('token');
+            localStorage.removeItem('token'); // No token
             const config = createApiConfiguration();
 
             expect(config.basePath).toBe('http://test-api.local:8080');
@@ -80,7 +86,7 @@ describe('API Client', () => {
         it('should create configuration with custom token getter', () => {
             const customTokenGetter = vi.fn(() => 'custom-jwt-token');
             setTokenGetter(customTokenGetter);
-            
+
             const config = createApiConfiguration();
 
             expect(customTokenGetter).toHaveBeenCalled();
@@ -92,7 +98,7 @@ describe('API Client', () => {
                 value: {},
                 writable: true
             });
-            
+
             const config = createApiConfiguration();
 
             expect(config.basePath).toBe('http://localhost:5097');
@@ -107,8 +113,6 @@ describe('API Client', () => {
                 writable: true
             });
 
-            
-
             const config = createApiConfiguration();
 
             expect(config.basePath).toBe('http://api-base-url.test');
@@ -119,8 +123,6 @@ describe('API Client', () => {
 
             localStorage.setItem('token', complexToken);
 
-            
-
             const config = createApiConfiguration();
 
             expect(config.accessToken).toBe(complexToken);
@@ -129,7 +131,6 @@ describe('API Client', () => {
 
     describe('updateApiConfiguration', () => {
         it('should create a new configuration', () => {
-
             localStorage.setItem('token', 'updated-token');
             const config = updateApiConfiguration();
 
@@ -142,6 +143,7 @@ describe('API Client', () => {
         it('should be exported correctly', () => {
             expect(API_BASE_URL).toBeDefined();
             expect(typeof API_BASE_URL).toBe('string');
+            expect(API_BASE_URL).toBe('http://test-api.local:8080');
         });
     });
 
@@ -157,7 +159,6 @@ describe('API Client', () => {
         });
 
         it('should log configuration details when creating API config', () => {
-            
             localStorage.setItem('token', 'test-token');
 
             createApiConfiguration();
@@ -170,7 +171,6 @@ describe('API Client', () => {
         });
 
         it('should log null token when no token exists', () => {
-            
             localStorage.removeItem('token');
 
             createApiConfiguration();

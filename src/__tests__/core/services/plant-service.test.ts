@@ -2,22 +2,22 @@
 import { plantService } from '@/core/services/plant-service';
 import type { ServerControllersModelsPlantDTO } from '@/api/generated/api';
 
-vi.mock('@/api/generated/api', () => import('../../__mocks__/api'));
+vi.mock('@/api/generated', () => ({
+    Configuration: vi.fn().mockImplementation((config) => ({
+        basePath: config?.basePath || '',
+        accessToken: config?.accessToken,
+        baseOptions: config?.baseOptions || {}
+    }))
+}));
 
-
-vi.mock('axios', () => ({
-    default: {
-        create: vi.fn(() => ({
-            interceptors: {
-                request: {
-                    use: vi.fn()
-                },
-                response: {
-                    use: vi.fn()
-                }
-            }
-        }))
-    }
+vi.mock('@/api/generated/api', () => ({
+    PlantApi: vi.fn(() => ({
+        apiV1PlantsGet: vi.fn(),
+        apiV1PlantsIdGet: vi.fn(),
+        apiV1PlantsPost: vi.fn(),
+        apiV1PlantsIdPut: vi.fn(),
+        apiV1PlantsIdDelete: vi.fn(),
+    })),
 }));
 
 describe('PlantService', () => {
