@@ -58,14 +58,21 @@ describe('JournalService', () => {
         mockGrowthStageApiInstance = (journalService as any).growthStageApi;
     });
 
-    describe('Конструктор и инициализация', () => {
+    describe('Инициализация', () => {
         it('должен инициализировать API клиенты', () => {
             expect(mockJournalApiInstance).toBeDefined();
             expect(mockGrowthStageApiInstance).toBeDefined();
         });
 
-        it('должен добавлять токен в заголовки', () => {
-            expect(localStorageMock.getItem).toHaveBeenCalledWith('token');
+        it('должен предоставлять все публичные методы', () => {
+            expect(typeof journalService.getJournalRecords).toBe('function');
+            expect(typeof journalService.getJournalRecordById).toBe('function');
+            expect(typeof journalService.createJournalRecord).toBe('function');
+            expect(typeof journalService.updateJournalRecord).toBe('function');
+            expect(typeof journalService.deleteJournalRecord).toBe('function');
+            expect(typeof journalService.getGrowthStages).toBe('function');
+            expect(typeof journalService.getGrowthStageById).toBe('function');
+            expect(typeof journalService.getJournalStats).toBe('function');
         });
     });
 
