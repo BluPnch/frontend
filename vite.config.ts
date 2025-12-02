@@ -30,7 +30,7 @@ export default defineConfig({
         '**/*.config.*',
         '**/index.ts',
         '**/*.stories.*',
-        '**/*.test.*',
+        '**/client-service.test.ts',
       ],
     },
   },
