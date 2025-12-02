@@ -7,149 +7,76 @@ import type {
     ServerControllersModelsJournalRecordDTO
 } from '@/api/generated/api';
 
-// Простой мок для всего модуля
-vi.mock('@/api/generated/api', () => {
-    // Создаем мок-функции
-    const createMockApi = () => ({
-        apiV1UsersMeGet: vi.fn(),
-        apiV1ClientsIdGet: vi.fn(),
-        apiV1ClientsPlantsGet: vi.fn(),
-        apiV1ClientsJournalRecordsGet: vi.fn(),
-        apiV1PlantsIdGet: vi.fn(),
-        apiV1PlantsPost: vi.fn(),
-        apiV1PlantsIdPut: vi.fn(),
-        apiV1PlantsIdDelete: vi.fn(),
-        apiV1PlantsGet: vi.fn(),
-        apiV1SeedsGet: vi.fn(),
-        apiV1SeedsIdGet: vi.fn(),
-        apiV1SeedsPost: vi.fn(),
-        apiV1SeedsIdPut: vi.fn(),
-        apiV1SeedsIdDelete: vi.fn(),
-        apiV1JournalRecordsGet: vi.fn(),
-        apiV1JournalRecordsIdGet: vi.fn(),
-        apiV1JournalRecordsPost: vi.fn(),
-        apiV1JournalRecordsIdPut: vi.fn(),
-        apiV1JournalRecordsIdDelete: vi.fn(),
-    });
+// Создаем мок-функции заранее
+const mockUserApi = {
+    apiV1UsersMeGet: vi.fn(),
+};
 
-    const mockApi = createMockApi();
+const mockClientApi = {
+    apiV1ClientsIdGet: vi.fn(),
+    apiV1ClientsPlantsGet: vi.fn(),
+    apiV1ClientsJournalRecordsGet: vi.fn(),
+};
 
-    return {
-        UserApi: vi.fn(() => ({
-            apiV1UsersMeGet: mockApi.apiV1UsersMeGet,
-        })),
-        ClientApi: vi.fn(() => ({
-            apiV1ClientsIdGet: mockApi.apiV1ClientsIdGet,
-            apiV1ClientsPlantsGet: mockApi.apiV1ClientsPlantsGet,
-            apiV1ClientsJournalRecordsGet: mockApi.apiV1ClientsJournalRecordsGet,
-        })),
-        PlantApi: vi.fn(() => ({
-            apiV1PlantsIdGet: mockApi.apiV1PlantsIdGet,
-            apiV1PlantsPost: mockApi.apiV1PlantsPost,
-            apiV1PlantsIdPut: mockApi.apiV1PlantsIdPut,
-            apiV1PlantsIdDelete: mockApi.apiV1PlantsIdDelete,
-            apiV1PlantsGet: mockApi.apiV1PlantsGet,
-        })),
-        SeedApi: vi.fn(() => ({
-            apiV1SeedsGet: mockApi.apiV1SeedsGet,
-            apiV1SeedsIdGet: mockApi.apiV1SeedsIdGet,
-            apiV1SeedsPost: mockApi.apiV1SeedsPost,
-            apiV1SeedsIdPut: mockApi.apiV1SeedsIdPut,
-            apiV1SeedsIdDelete: mockApi.apiV1SeedsIdDelete,
-        })),
-        JournalRecordApi: vi.fn(() => ({
-            apiV1JournalRecordsGet: mockApi.apiV1JournalRecordsGet,
-            apiV1JournalRecordsIdGet: mockApi.apiV1JournalRecordsIdGet,
-            apiV1JournalRecordsPost: mockApi.apiV1JournalRecordsPost,
-            apiV1JournalRecordsIdPut: mockApi.apiV1JournalRecordsIdPut,
-            apiV1JournalRecordsIdDelete: mockApi.apiV1JournalRecordsIdDelete,
-        })),
-    };
-});
+const mockPlantApi = {
+    apiV1PlantsIdGet: vi.fn(),
+    apiV1PlantsPost: vi.fn(),
+    apiV1PlantsIdPut: vi.fn(),
+    apiV1PlantsIdDelete: vi.fn(),
+    apiV1PlantsGet: vi.fn(),
+};
+
+const mockSeedApi = {
+    apiV1SeedsGet: vi.fn(),
+    apiV1SeedsIdGet: vi.fn(),
+    apiV1SeedsPost: vi.fn(),
+    apiV1SeedsIdPut: vi.fn(),
+    apiV1SeedsIdDelete: vi.fn(),
+};
+
+const mockJournalRecordApi = {
+    apiV1JournalRecordsGet: vi.fn(),
+    apiV1JournalRecordsIdGet: vi.fn(),
+    apiV1JournalRecordsPost: vi.fn(),
+    apiV1JournalRecordsIdPut: vi.fn(),
+    apiV1JournalRecordsIdDelete: vi.fn(),
+};
+
+// Мокаем модуль
+vi.mock('@/api/generated/api', () => ({
+    UserApi: vi.fn(() => mockUserApi),
+    ClientApi: vi.fn(() => mockClientApi),
+    PlantApi: vi.fn(() => mockPlantApi),
+    SeedApi: vi.fn(() => mockSeedApi),
+    JournalRecordApi: vi.fn(() => mockJournalRecordApi),
+}));
+
+// Мокаем api-client
+vi.mock('@/api/api-client', () => ({
+    createApiConfiguration: vi.fn(() => ({
+        basePath: 'http://test.local',
+        accessToken: 'test-token'
+    })),
+    getTokenFromStorage: vi.fn()
+}));
 
 describe('ClientService', () => {
-    // Создаем отдельные мок-функции для каждого API
-    const mockUserApi = {
-        apiV1UsersMeGet: vi.fn(),
-    };
-
-    const mockClientApi = {
-        apiV1ClientsIdGet: vi.fn(),
-        apiV1ClientsPlantsGet: vi.fn(),
-        apiV1ClientsJournalRecordsGet: vi.fn(),
-    };
-
-    const mockPlantApi = {
-        apiV1PlantsIdGet: vi.fn(),
-        apiV1PlantsPost: vi.fn(),
-        apiV1PlantsIdPut: vi.fn(),
-        apiV1PlantsIdDelete: vi.fn(),
-        apiV1PlantsGet: vi.fn(),
-    };
-
-    const mockSeedApi = {
-        apiV1SeedsGet: vi.fn(),
-        apiV1SeedsIdGet: vi.fn(),
-        apiV1SeedsPost: vi.fn(),
-        apiV1SeedsIdPut: vi.fn(),
-        apiV1SeedsIdDelete: vi.fn(),
-    };
-
-    const mockJournalRecordApi = {
-        apiV1JournalRecordsGet: vi.fn(),
-        apiV1JournalRecordsIdGet: vi.fn(),
-        apiV1JournalRecordsPost: vi.fn(),
-        apiV1JournalRecordsIdPut: vi.fn(),
-        apiV1JournalRecordsIdDelete: vi.fn(),
-    };
-
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.clear();
 
-        // Сбрасываем все моки
-        vi.mocked(mockUserApi.apiV1UsersMeGet).mockReset();
-        vi.mocked(mockClientApi.apiV1ClientsIdGet).mockReset();
-        vi.mocked(mockClientApi.apiV1ClientsPlantsGet).mockReset();
-        vi.mocked(mockClientApi.apiV1ClientsJournalRecordsGet).mockReset();
-        vi.mocked(mockPlantApi.apiV1PlantsIdGet).mockReset();
-        vi.mocked(mockPlantApi.apiV1PlantsPost).mockReset();
-        vi.mocked(mockPlantApi.apiV1PlantsIdPut).mockReset();
-        vi.mocked(mockPlantApi.apiV1PlantsIdDelete).mockReset();
-        vi.mocked(mockPlantApi.apiV1PlantsGet).mockReset();
-        vi.mocked(mockSeedApi.apiV1SeedsGet).mockReset();
-        vi.mocked(mockSeedApi.apiV1SeedsIdGet).mockReset();
-        vi.mocked(mockSeedApi.apiV1SeedsPost).mockReset();
-        vi.mocked(mockSeedApi.apiV1SeedsIdPut).mockReset();
-        vi.mocked(mockSeedApi.apiV1SeedsIdDelete).mockReset();
-        vi.mocked(mockJournalRecordApi.apiV1JournalRecordsGet).mockReset();
-        vi.mocked(mockJournalRecordApi.apiV1JournalRecordsIdGet).mockReset();
-        vi.mocked(mockJournalRecordApi.apiV1JournalRecordsPost).mockReset();
-        vi.mocked(mockJournalRecordApi.apiV1JournalRecordsIdPut).mockReset();
-        vi.mocked(mockJournalRecordApi.apiV1JournalRecordsIdDelete).mockReset();
-
-        // Мокаем импорт модуля
-        vi.doMock('@/api/generated/api', () => ({
-            UserApi: vi.fn(() => mockUserApi),
-            ClientApi: vi.fn(() => mockClientApi),
-            PlantApi: vi.fn(() => mockPlantApi),
-            SeedApi: vi.fn(() => mockSeedApi),
-            JournalRecordApi: vi.fn(() => mockJournalRecordApi),
-        }));
+        // Reset all mock implementations
+        Object.values(mockUserApi).forEach(fn => fn.mockReset());
+        Object.values(mockClientApi).forEach(fn => fn.mockReset());
+        Object.values(mockPlantApi).forEach(fn => fn.mockReset());
+        Object.values(mockSeedApi).forEach(fn => fn.mockReset());
+        Object.values(mockJournalRecordApi).forEach(fn => fn.mockReset());
     });
 
     const createTestInstance = () => {
-        // Используем динамический импорт
-        const ClientService = require('@/core/services/client-service').ClientService;
+        // Динамический импорт после установки моков
+        const { ClientService } = require('@/core/services/client-service');
         const instance = new ClientService();
-
-        // Мокаем API внутри инстанса
-        (instance as any).userApi = mockUserApi;
-        (instance as any).clientApi = mockClientApi;
-        (instance as any).plantApi = mockPlantApi;
-        (instance as any).seedApi = mockSeedApi;
-        (instance as any).journalRecordApi = mockJournalRecordApi;
-
         return instance;
     };
 

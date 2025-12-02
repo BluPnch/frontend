@@ -21,37 +21,23 @@ vi.mock('@/api/generated', () => {
     };
 });
 
+// Мок для process.env через vi.stubEnv
 describe('API Client', () => {
-    const mockEnv = {
-        VITE_API_BASE_URL: 'http://test-api.local:8080',
-        VITE_API_URL: 'http://test-api.local:8080'
-    };
-
-    let originalEnv: any;
-
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.clear();
 
-        // Save original env
-        originalEnv = { ...import.meta.env };
-
-        // Mock import.meta.env
-        Object.defineProperty(import.meta, 'env', {
-            value: { ...mockEnv },
-            writable: true
-        });
+        // Устанавливаем переменные окружения перед каждым тестом
+        vi.stubEnv('VITE_API_BASE_URL', 'http://test-api.local:8080');
+        vi.stubEnv('VITE_API_URL', 'http://test-api.local:8080');
 
         // Reset the token getter
         setTokenGetter(getTokenFromStorage);
     });
 
     afterEach(() => {
-        // Restore original env
-        Object.defineProperty(import.meta, 'env', {
-            value: originalEnv,
-            writable: true
-        });
+        // Восстанавливаем оригинальные переменные окружения
+        vi.unstubAllEnvs();
     });
 
     describe('getTokenFromStorage', () => {
@@ -105,10 +91,8 @@ describe('API Client', () => {
         });
 
         it('should use default base URL when env variable is not set', () => {
-            Object.defineProperty(import.meta, 'env', {
-                value: {},
-                writable: true
-            });
+            // Убираем переменные окружения для этого теста
+            vi.unstubAllEnvs();
 
             const config = createApiConfiguration();
 
@@ -116,13 +100,9 @@ describe('API Client', () => {
         });
 
         it('should prioritize VITE_API_BASE_URL over VITE_API_URL', () => {
-            Object.defineProperty(import.meta, 'env', {
-                value: {
-                    VITE_API_BASE_URL: 'http://api-base-url.test',
-                    VITE_API_URL: 'http://api-url.test'
-                },
-                writable: true
-            });
+            // Устанавливаем обе переменные, но VITE_API_BASE_URL должен иметь приоритет
+            vi.stubEnv('VITE_API_BASE_URL', 'http://api-base-url.test');
+            vi.stubEnv('VITE_API_URL', 'http://api-url.test');
 
             const config = createApiConfiguration();
 
@@ -154,7 +134,7 @@ describe('API Client', () => {
         it('should be exported correctly', () => {
             expect(API_BASE_URL).toBeDefined();
             expect(typeof API_BASE_URL).toBe('string');
-            // Исправляем ожидание - API_BASE_URL будет использовать текущий env
+            // API_BASE_URL использует текущие переменные окружения
             expect(API_BASE_URL).toBe('http://test-api.local:8080');
         });
     });
@@ -186,6 +166,8 @@ describe('API Client', () => {
 
             createApiConfiguration();
 
+            expect(consoleSpy).toHaveBeenCalledWith('🔧 Creating API configuration:');
+            expect(consoleSpy).toHaveBeenCalledWith('   basePath:', 'http://test-api.local:8080');
             expect(consoleSpy).toHaveBeenCalledWith('   token exists:', false);
             expect(consoleSpy).toHaveBeenCalledWith('   Configuration accessToken:', 'not set');
         });
