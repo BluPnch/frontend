@@ -124,3 +124,14 @@
     color: var(--gray);
     font-size: var(--font-size-base);
 }
+
+/* ===== ВАЛИДАЦИЯ ФОРМ ===== */
+.invalid {
+    border-color: var(--error-color) !important;
+}
+
+.form-group input.invalid:focus,
+.form-group select.invalid:focus,
+.form-group textarea.invalid:focus {
+    box-shadow: 0 0 0 3px rgba(195, 51, 51, 0.1);
+}

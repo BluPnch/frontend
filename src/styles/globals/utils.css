@@ -99,6 +99,31 @@
     padding-right: var(--spacing-xl);
 }
 
+
+/* ===== МОДАЛЬНЫЕ ОКНА - ДЕЙСТВИЯ ===== */
+.modal-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+
+
 /* ===== СТАТИСТИКА ===== */
 .stats-grid {
     display: grid;
