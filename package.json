@@ -14,6 +14,7 @@
     "test:coverage": "jest --config jest.config.cjs --coverage",
     "test:admin-service": "jest --config jest.config.cjs src/__tests__/services/admin-service.test.ts",
     "test:employee-service": "jest --config jest.config.cjs src/__tests__/services/employee-service.test.ts",
+    "test:client-service": "jest --config jest.config.cjs src/__tests__/services/client-service.test.ts",
     "test:plant-service": "jest --config jest.config.cjs src/__tests__/services/plant-service.test.ts",
     "test:journal-service": "jest --config jest.config.cjs src/__tests__/services/journal-service.test.ts",
     "test:seed-service": "jest --config jest.config.cjs src/__tests__/services/seed-service.test.ts",
