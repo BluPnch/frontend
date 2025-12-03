@@ -334,4 +334,233 @@ describe('UserService', () => {
             });
         });
     });
+
+    
+    describe('Дополнительные тесты для повышения покрытия', () => {
+        describe('getCurrentUser - edge cases', () => {
+            it('должен выбрасывать ошибку при undefined токене', async () => {
+                // Arrange
+                localStorageMock.getItem.mockReturnValue('undefined');
+
+                // Act & Assert
+                await expect(userService.getCurrentUser()).rejects.toThrow('Invalid token');
+            });
+
+            it('должен выбрасывать ошибку при null токене', async () => {
+                // Arrange
+                localStorageMock.getItem.mockReturnValue('null');
+
+                // Act & Assert
+                await expect(userService.getCurrentUser()).rejects.toThrow('Invalid token');
+            });
+
+            it('должен выбрасывать ошибку при ошибке JSON.parse в payload', async () => {
+                // Arrange
+                const invalidToken = 'header.invalidbase64.signature';
+                localStorageMock.getItem.mockReturnValue(invalidToken);
+
+                mockAtob.mockReset();
+                mockAtob.mockReturnValue('invalid-json-string'); // Невалидный JSON
+
+                // Act & Assert
+                await expect(userService.getCurrentUser()).rejects.toThrow('Invalid token payload');
+            });
+
+            it('должен пропускать проверку exp если поле отсутствует', async () => {
+                // Arrange
+                const validToken = 'header.payload.signature';
+                localStorageMock.getItem.mockReturnValue(validToken);
+
+                mockAtob.mockReset();
+                mockAtob.mockReturnValue('payload');
+                mockAtob.mockReturnValue('{"sub":"user-1"}'); // Без поля exp
+
+                const mockResponse = mockApiResponse(mockUserDTO);
+                mockUserApiInstance.apiV1UsersMeGet.mockResolvedValue(mockResponse);
+
+                // Act
+                const result = await userService.getCurrentUser();
+
+                // Assert
+                expect(result.id).toBe('user-1');
+            });
+
+            it('должен обрабатывать не-Axios ошибки', async () => {
+                // Arrange
+                const validToken = 'header.payload.signature';
+                localStorageMock.getItem.mockReturnValue(validToken);
+
+                mockAtob.mockReset();
+                mockAtob.mockReturnValue('payload');
+                mockAtob.mockReturnValue('{"sub":"user-1"}');
+
+                // Обычная ошибка (не Axios)
+                const regularError = new Error('Regular error');
+                mockUserApiInstance.apiV1UsersMeGet.mockRejectedValue(regularError);
+
+                // Act & Assert
+                await expect(userService.getCurrentUser()).rejects.toThrow('Regular error');
+            });
+
+            it('должен обрабатывать не-Error объекты в catch блоке', async () => {
+                // Arrange
+                const validToken = 'header.payload.signature';
+                localStorageMock.getItem.mockReturnValue(validToken);
+
+                mockAtob.mockReset();
+                mockAtob.mockReturnValue('payload');
+                mockAtob.mockReturnValue('{"sub":"user-1"}');
+
+                // Не-Error объект
+                mockUserApiInstance.apiV1UsersMeGet.mockRejectedValue('Просто строка ошибки');
+
+                // Act & Assert
+                await expect(userService.getCurrentUser()).rejects.toThrow('Неизвестная ошибка при получении данных пользователя');
+            });
+        });
+
+        describe('updateApiConfig', () => {
+            it('должен создавать новые экземпляры API с интерцепторами', () => {
+                // Arrange
+                const originalUserApi = (userService as any).userApi;
+                const originalAuthApi = (userService as any).authApi;
+
+                // Act
+                (userService as any).updateApiConfig();
+
+                // Assert
+                const newUserApi = (userService as any).userApi;
+                const newAuthApi = (userService as any).authApi;
+
+                expect(newUserApi).toBeDefined();
+                expect(newAuthApi).toBeDefined();
+                expect(newUserApi).not.toBe(originalUserApi);
+                expect(newAuthApi).not.toBe(originalAuthApi);
+            });
+
+            it('должен вызываться автоматически после login', async () => {
+                // Arrange
+                const mockResponse = mockApiResponse(mockLoginResponse);
+                mockAuthApiInstance.apiV1AuthLoginPost.mockResolvedValue(mockResponse);
+                const updateApiConfigSpy = jest.spyOn(userService as any, 'updateApiConfig');
+
+                // Act
+                await userService.login('test@example.com', 'password123');
+
+                // Assert
+                expect(updateApiConfigSpy).toHaveBeenCalled();
+            });
+        });
+
+        describe('getClients - дополнительные сценарии', () => {
+            it('должен получать клиентов с фильтром по companyName', async () => {
+                // Arrange
+                const clients = [mockClientDTO];
+                const mockResponse = mockApiResponse(clients);
+                mockClientApiInstance.apiV1ClientsGet.mockResolvedValue(mockResponse);
+
+                // Act
+                const result = await userService.getClients('Test Company');
+
+                // Assert
+                expect(mockClientApiInstance.apiV1ClientsGet).toHaveBeenCalledWith({
+                    companyName: 'Test Company',
+                    phoneNumber: undefined,
+                });
+                expect(result).toHaveLength(1);
+            });
+
+            it('должен получать клиентов с фильтром по phoneNumber', async () => {
+                // Arrange
+                const clients = [mockClientDTO];
+                const mockResponse = mockApiResponse(clients);
+                mockClientApiInstance.apiV1ClientsGet.mockResolvedValue(mockResponse);
+
+                // Act
+                const result = await userService.getClients(undefined, '+0987654321');
+
+                // Assert
+                expect(mockClientApiInstance.apiV1ClientsGet).toHaveBeenCalledWith({
+                    companyName: undefined,
+                    phoneNumber: '+0987654321',
+                });
+                expect(result).toHaveLength(1);
+            });
+
+            it('должен обрабатывать сетевые ошибки при получении клиентов', async () => {
+                // Arrange
+                mockClientApiInstance.apiV1ClientsGet.mockRejectedValue(mockNetworkError());
+
+                // Act & Assert
+                await expect(userService.getClients()).rejects.toThrow('Network Error');
+            });
+        });
+
+        describe('login/register - edge cases', () => {
+            it('должен обрабатывать успешный login без токена в ответе', async () => {
+                // Arrange
+                const responseWithoutToken = { username: 'testuser' };
+                const mockResponse = mockApiResponse(responseWithoutToken);
+                mockAuthApiInstance.apiV1AuthLoginPost.mockResolvedValue(mockResponse);
+
+                // Act
+                const result = await userService.login('test@example.com', 'password123');
+
+                // Assert
+                expect(result.token).toBeUndefined();
+                expect(localStorageMock.setItem).not.toHaveBeenCalledWith('token', expect.anything());
+            });
+
+            it('должен обрабатывать не-Error объекты в login', async () => {
+                // Arrange
+                mockAuthApiInstance.apiV1AuthLoginPost.mockRejectedValue('Просто строка ошибки');
+
+                // Act & Assert
+                await expect(userService.login('test@example.com', 'password123'))
+                    .rejects.toThrow('Неизвестная ошибка при входе');
+            });
+
+            it('должен обрабатывать не-Error объекты в register', async () => {
+                // Arrange
+                mockAuthApiInstance.apiV1AuthRegisterPost.mockRejectedValue('Просто строка ошибки');
+
+                // Act & Assert
+                await expect(userService.register(mockRegisterRequest))
+                    .rejects.toThrow('Неизвестная ошибка при регистрации');
+            });
+        });
+
+        describe('Управление сессией - дополнительные тесты', () => {
+            it('getToken должен возвращать null для невалидных значений', () => {
+                // Test various edge cases
+                localStorageMock.getItem.mockReturnValueOnce('');
+                expect(userService.getToken()).toBe('');
+
+                localStorageMock.getItem.mockReturnValueOnce('  ');
+                expect(userService.getToken()).toBe('  ');
+            });
+
+            it('isAuthenticated должен корректно обрабатывать edge cases', () => {
+                localStorageMock.getItem.mockReturnValueOnce('');
+                expect(userService.isAuthenticated()).toBe(false);
+
+                localStorageMock.getItem.mockReturnValueOnce('  ');
+                expect(userService.isAuthenticated()).toBe(true); // Пробелы считаются за токен
+
+                localStorageMock.getItem.mockReturnValueOnce('undefined');
+                expect(userService.isAuthenticated()).toBe(true);
+            });
+
+            it('logout должен вызывать updateApiConfig', () => {
+                // Arrange
+                const updateApiConfigSpy = jest.spyOn(userService as any, 'updateApiConfig');
+
+                // Act
+                userService.logout();
+
+                // Assert
+                expect(updateApiConfigSpy).toHaveBeenCalled();
+            });
+        });
+    });
 });
