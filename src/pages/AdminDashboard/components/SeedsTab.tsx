@@ -1,6 +1,7 @@
-﻿import React from 'react';
+﻿import React, { useState } from 'react';
 import type { Seed, Plant } from '../../../core/models/product';
 import { viabilityTypes, lightRequirements } from '../../../core/utils/enumMaps';
+import { ConfirmModal } from './ConfirmModal'; // Импортируем компонент модального окна
 
 interface SeedsTabProps {
     seeds: Seed[];
@@ -17,6 +18,11 @@ export const SeedsTab: React.FC<SeedsTabProps> = ({
                                                       onEditSeed,
                                                       onDeleteSeed
                                                   }) => {
+    // Состояния для управления модальным окном
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [seedToDelete, setSeedToDelete] = useState<string | null>(null);
+    const [seedToDeleteInfo, setSeedToDeleteInfo] = useState<{ plantInfo: string } | null>(null);
+
     const getPlantInfo = (plantId: string) => {
         const plant = plants.find(p => p.id === plantId);
         if (!plant) return '-';
@@ -31,9 +37,52 @@ export const SeedsTab: React.FC<SeedsTabProps> = ({
         return lightRequirements[light as keyof typeof lightRequirements] || 'Неизвестно';
     };
 
+    // Обработчик клика на кнопку удаления
+    const handleDeleteClick = (seedId: string, plantId: string) => {
+        const plantInfo = getPlantInfo(plantId);
+        setSeedToDelete(seedId);
+        setSeedToDeleteInfo({
+            plantInfo
+        });
+        setShowDeleteModal(true);
+    };
+
+    // Подтверждение удаления
+    const handleConfirmDelete = () => {
+        if (seedToDelete) {
+            console.log('🟢 SeedsTab: Подтверждено удаление семени с ID:', seedToDelete);
+            onDeleteSeed(seedToDelete);
+            setShowDeleteModal(false);
+            setSeedToDelete(null);
+            setSeedToDeleteInfo(null);
+        }
+    };
+
+    // Отмена удаления
+    const handleCancelDelete = () => {
+        console.log('🟡 SeedsTab: Удаление семени отменено');
+        setShowDeleteModal(false);
+        setSeedToDelete(null);
+        setSeedToDeleteInfo(null);
+    };
 
     return (
         <div className="seeds-tab">
+            {/* Модальное окно подтверждения удаления */}
+            <ConfirmModal
+                show={showDeleteModal}
+                title="Подтверждение удаления семени"
+                message={
+                    seedToDeleteInfo
+                        ? `Вы уверены, что хотите удалить семя растения "${seedToDeleteInfo.plantInfo}"? Это действие нельзя отменить.`
+                        : 'Вы уверены, что хотите удалить это семя? Это действие нельзя отменить.'
+                }
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+                confirmText="Удалить"
+                cancelText="Отмена"
+            />
+
             <div className="tab-header">
                 <div className="tab-actions">
                     <button className="btn btn-primary" onClick={onAddSeed}>
@@ -82,7 +131,7 @@ export const SeedsTab: React.FC<SeedsTabProps> = ({
                                         </button>
                                         <button
                                             className="btn btn-danger btn-sm"
-                                            onClick={() => onDeleteSeed(seed.id!)}
+                                            onClick={() => handleDeleteClick(seed.id!, seed.plantId)}
                                         >
                                             Удалить
                                         </button>

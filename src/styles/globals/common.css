@@ -135,6 +135,24 @@ a:hover {
     transform: none;
 }
 
+.btn-danger {
+    background: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+}
+
+/* ===== МОДАЛЬНЫЕ ОКНА - ТЕЛО ===== */
+.modal-body {
+    padding: var(--spacing-lg) 0;
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
 /* ===== КАРТОЧКИ ===== */
 .card {
     background: var(--white);

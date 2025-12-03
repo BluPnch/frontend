@@ -1,7 +1,8 @@
-﻿import React from 'react';
+﻿import React, { useState } from 'react';
 import type { JournalRecord, Plant, GrowthStage } from '../../../core/models/product';
 import type { Employee, Client } from '../../../core/models/user';
 import { conditionTypes } from '../../../core/utils/enumMaps';
+import { ConfirmModal } from './ConfirmModal'; // Импортируем компонент модального окна
 
 interface JournalTabProps {
     records: JournalRecord[];
@@ -32,8 +33,39 @@ export const JournalTab: React.FC<JournalTabProps> = ({
                                                           getEmployeeName,
                                                           getGrowthStageName
                                                       }) => {
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
+    const [recordToDeleteInfo, setRecordToDeleteInfo] = useState<{ plantName: string, date: string } | null>(null);
+
     const getConditionName = (condition: number) => {
         return conditionTypes[condition as keyof typeof conditionTypes] || 'Неизвестно';
+    };
+
+    const handleDeleteClick = (recordId: string, plantId: string, date: string) => {
+        const plantInfo = getPlantInfo(plantId);
+        setRecordToDelete(recordId);
+        setRecordToDeleteInfo({
+            plantName: plantInfo,
+            date: new Date(date).toLocaleDateString('ru-RU')
+        });
+        setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (recordToDelete) {
+            console.log('🟢 JournalTab: Подтверждено удаление записи с ID:', recordToDelete);
+            onDeleteRecord(recordToDelete);
+            setShowDeleteModal(false);
+            setRecordToDelete(null);
+            setRecordToDeleteInfo(null);
+        }
+    };
+
+    const handleCancelDelete = () => {
+        console.log('🟡 JournalTab: Удаление отменено');
+        setShowDeleteModal(false);
+        setRecordToDelete(null);
+        setRecordToDeleteInfo(null);
     };
 
     const handleAddRecord = () => {
@@ -41,9 +73,23 @@ export const JournalTab: React.FC<JournalTabProps> = ({
         console.log('🟢 JournalTab: Вызываю onAddRecord');
         onAddRecord();
     };
-    
+
     return (
         <div className="journal-tab">
+            <ConfirmModal
+                show={showDeleteModal}
+                title="Подтверждение удаления записи"
+                message={
+                    recordToDeleteInfo
+                        ? `Вы уверены, что хотите удалить запись о растении "${recordToDeleteInfo.plantName}" от ${recordToDeleteInfo.date}? Это действие нельзя отменить.`
+                        : 'Вы уверены, что хотите удалить эту запись? Это действие нельзя отменить.'
+                }
+                onConfirm={handleConfirmDelete}
+                onCancel={handleCancelDelete}
+                confirmText="Удалить"
+                cancelText="Отмена"
+            />
+
             <div className="tab-header">
                 <div className="tab-actions">
                     <button className="btn btn-primary" onClick={handleAddRecord}>
@@ -94,7 +140,7 @@ export const JournalTab: React.FC<JournalTabProps> = ({
                                         </button>
                                         <button
                                             className="btn btn-danger btn-sm"
-                                            onClick={() => onDeleteRecord(record.id!)}
+                                            onClick={() => handleDeleteClick(record.id!, record.plantId, record.date)}
                                         >
                                             Удалить
                                         </button>
