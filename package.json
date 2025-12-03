@@ -12,6 +12,7 @@
     "test": "jest --config jest.config.cjs",
     "test:watch": "jest --config jest.config.cjs --watch",
     "test:coverage": "jest --config jest.config.cjs --coverage",
+    "test:user-service": "jest --config jest.config.cjs src/__tests__/services/user-service.test.ts",
     "test:admin-service": "jest --config jest.config.cjs src/__tests__/services/admin-service.test.ts",
     "test:employee-service": "jest --config jest.config.cjs src/__tests__/services/employee-service.test.ts",
     "test:client-service": "jest --config jest.config.cjs src/__tests__/services/client-service.test.ts",
