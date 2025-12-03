@@ -2,6 +2,7 @@
 import type { Plant } from '../../../core/models/product';
 import type { Client } from '../../../core/models/user';
 import { flowerTypes, fruitTypes, reproductionTypes } from '../../../core/utils/enumMaps';
+import { ErrorModal } from './ErrorModal';
 
 interface PlantModalProps {
     show: boolean;
@@ -17,8 +18,8 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                                                           clients,
                                                           onClose,
                                                           onSubmit }) => {
+
     const [formData, setFormData] = useState<Partial<Plant>>({
-        id: '',
         clientId: '',
         specie: '',
         family: '',
@@ -27,14 +28,17 @@ export const PlantModal: React.FC<PlantModalProps> = ({
         reproduction: 0
     });
 
-    useEffect(() => {
-        console.log('🟡 PlantModal: Монтирование/обновление компонента');
+    const [errorModal, setErrorModal] = useState({
+        show: false,
+        message: ''
+    });
 
+    useEffect(() => {
         if (plant) {
             setFormData(plant);
         } else {
             setFormData({
-                clientId: clients.length > 0 ? clients[0].id : '',
+                clientId: '',
                 specie: '',
                 family: '',
                 flower: 0,
@@ -42,32 +46,40 @@ export const PlantModal: React.FC<PlantModalProps> = ({
                 reproduction: 0
             });
         }
-    }, [plant, show, clients]);
+    }, [plant, show]);
+
+    const showError = (message: string) => {
+        setErrorModal({
+            show: true,
+            message
+        });
+    };
+
+    const closeErrorModal = () => {
+        setErrorModal({
+            show: false,
+            message: ''
+        });
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('🟡 PlantModal: Отправка формы', formData);
 
-        if (!formData.family?.trim()) {
-            console.error('❌ PlantModal: Семейство не заполнено');
-            alert('Пожалуйста, заполните семейство растения');
+        // Валидация
+        if (!formData.clientId) {
+            showError('Выберите клиента');
+            return;
+        }
+        if (!formData.specie) {
+            showError('Введите вид растения');
+            return;
+        }
+        if (!formData.family) {
+            showError('Введите семейство растения');
             return;
         }
 
-        if (!formData.specie?.trim()) {
-            console.error('❌ PlantModal: Вид не заполнен');
-            alert('Пожалуйста, заполните вид растения');
-            return;
-        }
-
-        if (!formData.clientId?.trim()) {
-            console.error('❌ PlantModal: Клиент не выбран');
-            alert('Пожалуйста, выберите клиента');
-            return;
-        }
-
-        console.log('✅ PlantModal: Все поля заполнены, отправляем данные');
-        onSubmit(formData);
+        onSubmit(formData as Plant);
     };
 
     const handleChange = (field: keyof Plant, value: any) => {
@@ -75,104 +87,112 @@ export const PlantModal: React.FC<PlantModalProps> = ({
     };
 
     return (
-        <div className={`modal ${show ? 'show' : ''}`}>
-            <div className="modal-content">
-                <div className="modal-header">
-                    <h3>{plant ? 'Редактировать растение' : 'Добавить растение'}</h3>
-                    <button className="close" onClick={onClose}>×</button>
+        <>
+            <div className={`modal ${show ? 'show' : ''}`}>
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <h3>{plant ? 'Редактировать растение' : 'Добавить растение'}</h3>
+                        <button className="close" onClick={onClose}>×</button>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="form" noValidate>
+                        <div className="form-group">
+                            <label>Клиент *</label>
+                            <select
+                                value={formData.clientId || ''}
+                                onChange={(e) => handleChange('clientId', e.target.value)}
+                                className={!formData.clientId ? 'invalid' : ''}
+                            >
+                                <option value="">Выберите клиента</option>
+                                {clients.map(client => (
+                                    <option key={client.id} value={client.id}>
+                                        {client.companyName || client.id}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Вид *</label>
+                            <input
+                                type="text"
+                                value={formData.specie || ''}
+                                onChange={(e) => handleChange('specie', e.target.value)}
+                                className={!formData.specie ? 'invalid' : ''}
+                                placeholder="Введите вид растения"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Семейство *</label>
+                            <input
+                                type="text"
+                                value={formData.family || ''}
+                                onChange={(e) => handleChange('family', e.target.value)}
+                                className={!formData.family ? 'invalid' : ''}
+                                placeholder="Введите семейство растения"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Тип цветка</label>
+                            <select
+                                value={formData.flower || 0}
+                                onChange={(e) => handleChange('flower', parseInt(e.target.value))}
+                            >
+                                {Object.entries(flowerTypes).map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                        {label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Тип плода</label>
+                            <select
+                                value={formData.fruit || 0}
+                                onChange={(e) => handleChange('fruit', parseInt(e.target.value))}
+                            >
+                                {Object.entries(fruitTypes).map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                        {label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Способ размножения</label>
+                            <select
+                                value={formData.reproduction || 0}
+                                onChange={(e) => handleChange('reproduction', parseInt(e.target.value))}
+                            >
+                                {Object.entries(reproductionTypes).map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                        {label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="modal-actions">
+                            <button type="button" className="btn btn-secondary" onClick={onClose}>
+                                Отмена
+                            </button>
+                            <button type="submit" className="btn btn-primary">
+                                {plant ? 'Сохранить' : 'Создать'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <form onSubmit={handleSubmit} className="form">
-                    <div className="form-group">
-                        <label>Клиент *</label>
-                        <select
-                            value={formData.clientId || ''}
-                            onChange={(e) => handleChange('clientId', e.target.value)}
-                            required
-                        >
-                            <option value="">Выберите клиента</option>
-                            {clients.map(client => (
-                                <option key={client.id} value={client.id}>
-                                    {client.companyName || client.id}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Вид *</label>
-                        <input
-                            type="text"
-                            value={formData.specie || ''}
-                            onChange={(e) => handleChange('specie', e.target.value)}
-                            required
-                            placeholder="Введите вид растения"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Семейство *</label>
-                        <input
-                            type="text"
-                            value={formData.family || ''}
-                            onChange={(e) => handleChange('family', e.target.value)}
-                            required
-                            placeholder="Введите семейство растения"
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Тип цветка</label>
-                        <select
-                            value={formData.flower || 0}
-                            onChange={(e) => handleChange('flower', parseInt(e.target.value))}
-                        >
-                            {Object.entries(flowerTypes).map(([value, label]) => (
-                                <option key={value} value={value}>
-                                    {label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Тип плода</label>
-                        <select
-                            value={formData.fruit || 0}
-                            onChange={(e) => handleChange('fruit', parseInt(e.target.value))}
-                        >
-                            {Object.entries(fruitTypes).map(([value, label]) => (
-                                <option key={value} value={value}>
-                                    {label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="form-group">
-                        <label>Способ размножения</label>
-                        <select
-                            value={formData.reproduction || 0}
-                            onChange={(e) => handleChange('reproduction', parseInt(e.target.value))}
-                        >
-                            {Object.entries(reproductionTypes).map(([value, label]) => (
-                                <option key={value} value={value}>
-                                    {label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="modal-actions">
-                        <button type="button" className="btn btn-secondary" onClick={onClose}>
-                            Отмена
-                        </button>
-                        <button type="submit" className="btn btn-primary">
-                            {plant ? 'Сохранить' : 'Создать'}
-                        </button>
-                    </div>
-                </form>
             </div>
-        </div>
+
+            <ErrorModal
+                show={errorModal.show}
+                message={errorModal.message}
+                onClose={closeErrorModal}
+            />
+        </>
     );
 };
