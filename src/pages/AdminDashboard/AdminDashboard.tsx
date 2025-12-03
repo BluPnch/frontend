@@ -109,15 +109,49 @@ export const AdminDashboard: React.FC = () => {
         setActiveTab(tab);
     };
 
+    // ИСПРАВЛЕННАЯ ФУНКЦИЯ - убран confirm
     const assignClientAsEmployee = async (clientId: string) => {
-        if (!confirm('Вы уверены, что хотите назначить этого клиента сотрудником?')) return;
-
+        // УБРАН confirm - теперь подтверждение делается в ClientsTab через модальное окно
         try {
             await adminService.updateUserRole(clientId, 1);
             showAlertMessage('Клиент успешно назначен сотрудником', 'success');
             await loadAllData();
         } catch (error) {
             showAlertMessage('Ошибка назначения: ' + (error as Error).message, 'error');
+        }
+    };
+
+    // Функции удаления - нужно добавить состояние для отслеживания удаляемых элементов
+    const deletePlant = async (id: string) => {
+        // УБРАН confirm - теперь подтверждение делается в PlantsTab через модальное окно
+        try {
+            await plantService.deletePlant(id);
+            showAlertMessage('Растение успешно удалено', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const deleteSeed = async (id: string) => {
+        // УБРАН confirm - теперь подтверждение делается в SeedsTab через модальное окно
+        try {
+            await seedService.deleteSeed(id);
+            showAlertMessage('Семя успешно удалено', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
+        }
+    };
+
+    const deleteJournalRecord = async (id: string) => {
+        // УБРАН confirm - теперь подтверждение делается в JournalTab через модальное окно
+        try {
+            await journalService.deleteJournalRecord(id);
+            showAlertMessage('Запись журнала успешно удалена', 'success');
+            await loadAllData();
+        } catch (error) {
+            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
         }
     };
 
@@ -138,21 +172,9 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
-    const deletePlant = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить это растение?')) return;
-
-        try {
-            await plantService.deletePlant(id);
-            showAlertMessage('Растение успешно удалено', 'success');
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
-        }
-    };
-
     const handleSeedSubmit = async (data: Seed) => {
         // console.log('Submitting seed data:', data);
-        
+
         try {
             if (editingSeed && editingSeed.id) {
                 await seedService.updateSeed(editingSeed.id, data);
@@ -167,18 +189,6 @@ export const AdminDashboard: React.FC = () => {
         } catch (error) {
             console.error('Seed submission error:', error);
             showAlertMessage('Ошибка сохранения: ' + (error as Error).message, 'error');
-        }
-    };
-
-    const deleteSeed = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить это семя?')) return;
-
-        try {
-            await seedService.deleteSeed(id);
-            showAlertMessage('Семя успешно удалено', 'success');
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
         }
     };
 
@@ -204,19 +214,6 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
-    const deleteJournalRecord = async (id: string) => {
-        if (!confirm('Вы уверены, что хотите удалить эту запись журнала?')) return;
-
-        try {
-            await journalService.deleteJournalRecord(id);
-            showAlertMessage('Запись журнала успешно удалена', 'success');
-            await loadAllData();
-        } catch (error) {
-            showAlertMessage('Ошибка удаления: ' + (error as Error).message, 'error');
-        }
-    };
-
-
     const handleAdminSubmit = async (data: AdminCreateData) => {
         try {
             await adminService.createAdministrator(data);
@@ -227,8 +224,6 @@ export const AdminDashboard: React.FC = () => {
             showAlertMessage('Ошибка создания: ' + (error as Error).message, 'error');
         }
     };
-
-    
 
     const getClientName = (clientId: string) => {
         const client = clients.find(c => c.id === clientId);
@@ -285,7 +280,7 @@ export const AdminDashboard: React.FC = () => {
                     {activeTab === 'clients' && (
                         <ClientsTab
                             clients={clients}
-                            onAssignAsEmployee={assignClientAsEmployee}
+                            onAssignAsEmployee={assignClientAsEmployee} // Теперь эта функция не имеет confirm
                         />
                     )}
                     {activeTab === 'employees' && (
@@ -317,7 +312,7 @@ export const AdminDashboard: React.FC = () => {
                                 setEditingJournal(record);
                                 setShowJournalModal(true);
                             }}
-                            onDeleteRecord={deleteJournalRecord}
+                            onDeleteRecord={deleteJournalRecord} // Теперь эта функция не имеет confirm
                             getClientName={getClientName}
                             getPlantInfo={getPlantInfo}
                             getEmployeeName={getEmployeeName}
@@ -336,7 +331,7 @@ export const AdminDashboard: React.FC = () => {
                                 setEditingPlant(plant);
                                 setShowPlantModal(true);
                             }}
-                            onDeletePlant={deletePlant}
+                            onDeletePlant={deletePlant} // Теперь эта функция не имеет confirm
                         />
                     )}
                     {activeTab === 'seeds' && (
@@ -351,7 +346,7 @@ export const AdminDashboard: React.FC = () => {
                                 setEditingSeed(seed);
                                 setShowSeedModal(true);
                             }}
-                            onDeleteSeed={deleteSeed}
+                            onDeleteSeed={deleteSeed} // Теперь эта функция не имеет confirm
                         />
                     )}
                 </div>
@@ -366,6 +361,7 @@ export const AdminDashboard: React.FC = () => {
                             setEditingPlant(null);
                         }}
                         onSubmit={handlePlantSubmit}
+                        onDelete={deletePlant} // Добавляем onDelete если PlantModal имеет кнопку удаления
                     />
                 )}
 
