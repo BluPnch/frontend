@@ -9,10 +9,12 @@ import {
     convertPlantsArray,
     convertJournalRecordsArray
 } from '../../core/utils/type-converters';
+import {useNavigate} from "react-router-dom";
 
 type TabType = 'journal' | 'plants';
 
 export const ClientDashboard: React.FC = () => {
+    const navigate = useNavigate();
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState<TabType>('journal');
     const [plants, setPlants] = useState<Plant[]>([]);
@@ -35,9 +37,16 @@ export const ClientDashboard: React.FC = () => {
             setLoading(true);
             const user = await userService.getCurrentUser();
             if (!user) {
-                window.location.href = '/dashboard';
+                window.location.href = '/login';
                 return;
             }
+
+            // Проверяем роль
+            if (user.role !== 'client') {
+                window.location.href = `/${user.role}`;
+                return;
+            }
+
             setCurrentUser(user);
             await loadAllData();
         } catch (error) {

@@ -6,6 +6,7 @@ import '../../styles/globals/auth.css';
 import '../../styles/globals/common.css';
 import '../../styles/globals/forms.css';
 import '../../styles/globals/utils.css';
+import {useAppStore} from "../../core/stores/app-store.ts";
 
 export const Login: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -21,6 +22,7 @@ export const Login: React.FC = () => {
         setTimeout(() => setAlert(null), 5000);
     };
 
+    // В функции handleLogin 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -29,12 +31,33 @@ export const Login: React.FC = () => {
         try {
             const response = await userService.login(
                 loginData.username,
-                loginData.password   
+                loginData.password
             );
 
             showAlert('Вход выполнен успешно!', 'success');
+
+            // Ждем обновления состояния в app-store
             setTimeout(() => {
-                navigate('/dashboard');
+                const { user } = useAppStore.getState();
+                if (user?.role) {
+                    const role = user.role.toString().toLowerCase();
+                    let path = '/client';
+
+                    if (role.includes('admin')) path = '/admin';
+                    else if (role.includes('employee')) path = '/employee';
+
+                    console.log('Redirecting to:', path);
+                    navigate(path);
+                } else {
+                    // Если роль не определена, используем логику по имени пользователя
+                    let path = '/client';
+                    const username = loginData.username.toLowerCase();
+
+                    if (username.includes('admin')) path = '/admin';
+                    else if (username.includes('emp') || username.includes('employee')) path = '/employee';
+
+                    navigate(path);
+                }
             }, 100);
 
         } catch (err: any) {
@@ -57,9 +80,8 @@ export const Login: React.FC = () => {
             });
 
             showAlert('Регистрация успешна! Вы автоматически вошли в систему.', 'success');
-            setTimeout(() => {
-                navigate('/dashboard');
-            }, 100);
+
+            // Редирект произойдет автоматически через app-store
 
         } catch (err: any) {
             console.error('Registration error:', err);

@@ -26,10 +26,12 @@ import {
     convertJournalRecordsArray,
     convertGrowthStagesArray
 } from '../../core/utils/type-converters';
+import {useNavigate} from "react-router-dom";
 
 type TabType = 'journal' | 'plants' | 'seeds';
 
 export const EmployeeDashboard: React.FC = () => {
+    const navigate = useNavigate();
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState<TabType>('journal');
     const [clients, setClients] = useState<Client[]>([]);
@@ -59,17 +61,30 @@ export const EmployeeDashboard: React.FC = () => {
 
     const init = async () => {
         try {
-            const user = await userService.getCurrentUser();
+            const user = await userService.getCurrentUser() as AuthUser;
             if (!user) {
-                window.location.href = '/dashboard';
+                navigate('/login');
                 return;
             }
+
+            // Проверяем роль - сотрудник ИЛИ админ может зайти
+            const role = user.role?.toString().toLowerCase() || '';
+
+            if (!role.includes('employee') &&
+                !role.includes('сотрудник') &&
+                !role.includes('admin') &&
+                !role.includes('админ')) {
+                // Если не сотрудник и не админ, перенаправляем на клиентский dashboard
+                navigate('/client');
+                return;
+            }
+
             setCurrentUser(user);
             await loadAllData();
         } catch (error) {
             console.error('Initialization failed:', error);
             if (error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
-                window.location.href = '/login';
+                navigate('/login');
             }
         }
     };

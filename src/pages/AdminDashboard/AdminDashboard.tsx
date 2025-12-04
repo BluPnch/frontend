@@ -21,10 +21,12 @@ import { adminService } from "../../core/services/admin-service";
 import { plantService } from "../../core/services/plant-service";
 import { userService } from "../../core/services/user-service";
 import { journalService } from "../../core/services/journal-service";
+import {useNavigate} from "react-router-dom";
 
 type TabType = 'clients' | 'employees' | 'administrators' | 'journal' | 'plants' | 'seeds';
 
 export const AdminDashboard: React.FC = () => {
+    const navigate = useNavigate();
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [activeTab, setActiveTab] = useState<TabType>('clients');
     const [clients, setClients] = useState<Client[]>([]);
@@ -57,17 +59,31 @@ export const AdminDashboard: React.FC = () => {
 
     const init = async () => {
         try {
-            const user = await userService.getCurrentUser();
+            const user = await userService.getCurrentUser() as AuthUser;
             if (!user) {
-                window.location.href = '/dashboard';
+                navigate('/login');
                 return;
             }
+
+            // Проверяем роль - только админ может зайти
+            const role = user.role?.toString().toLowerCase() || '';
+
+            if (!role.includes('admin') && !role.includes('админ')) {
+                // Если не админ, перенаправляем на соответствующий dashboard
+                let redirectPath = '/client';
+                if (role.includes('employee') || role.includes('сотрудник')) {
+                    redirectPath = '/employee';
+                }
+                navigate(redirectPath);
+                return;
+            }
+
             setCurrentUser(user);
             await loadAllData();
         } catch (error) {
             console.error('Initialization failed:', error);
             if (error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
-                window.location.href = '/login';
+                navigate('/login');
             }
         }
     };

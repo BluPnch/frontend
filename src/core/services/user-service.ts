@@ -12,6 +12,7 @@ import type {
 import { createApiConfiguration } from '../../api/api-client';
 import type { AxiosError } from 'axios';
 import globalAxios from "axios";
+import type {AuthUser} from "../models/user.ts";
 
 
 class UserService {
@@ -185,7 +186,7 @@ class UserService {
         }
     }
 
-    async getCurrentUser(): Promise<ServerControllersModelsUserDTO> {
+    async getCurrentUser(): Promise<AuthUser> {
         try {
             const token = this.getToken();
             console.log('🔐 Token details:');
@@ -210,6 +211,11 @@ class UserService {
                 console.log('📋 Token payload:', payload);
                 console.log('⏰ Token expiration:', new Date(payload.exp * 1000));
 
+                // ИЗМЕНЕНИЕ: Проверяем роль в токене
+                if (payload.role) {
+                    console.log('👑 Role from token:', payload.role);
+                }
+
                 if (payload.exp && Date.now() >= payload.exp * 1000) {
                     console.log('❌ Token expired');
                     this.logout();
@@ -221,9 +227,26 @@ class UserService {
                 throw new Error('Invalid token payload');
             }
 
+            // ИЗМЕНЕНИЕ: Получаем AuthUser вместо User
             const response = await this.userApi.apiV1UsersMeGet();
-            console.log('✅ Current user response:', response.data);
-            return response.data;
+            console.log('✅ Current AuthUser response:', response.data);
+
+            // Приводим к типу AuthUser
+            const authUser = response.data as AuthUser;
+
+            // Если в токене есть роль, добавляем ее
+            try {
+                const tokenParts = token.split('.');
+                const payload = JSON.parse(atob(tokenParts[1]));
+                if (payload.role && !authUser.role) {
+                    authUser.role = payload.role;
+                }
+            } catch (e) {
+                console.log('Could not extract role from token');
+            }
+
+            return authUser;
+
         } catch (error: unknown) {
             console.error('Failed to get current user:', error);
 
@@ -231,7 +254,6 @@ class UserService {
                 console.log('Token is invalid, logging out...');
                 this.logout();
             }
-
 
             if (error instanceof Error) {
                 throw new Error(error.message || 'Ошибка получения данных пользователя');

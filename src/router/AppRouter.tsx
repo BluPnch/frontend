@@ -1,54 +1,137 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { MemoryRouter } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from '../pages/Login/Login';
-import { Dashboard } from '../pages/Dashboard/Dashboard';
 import { AdminDashboard } from '../pages/AdminDashboard/AdminDashboard';
 import { EmployeeDashboard } from '../pages/EmployeeDashboard/EmployeeDashboard';
 import { ClientDashboard } from '../pages/ClientDashboard/ClientDashboard';
 import { ProtectedRoute } from './ProtectedRoute';
-import { userService } from '../core/services/user-service';
+import { useAppStore } from '../core/stores/app-store';
+
+// Вспомогательная функция для получения пути по роли
+const getRolePath = (roleEnum?: any): string => {
+    if (!roleEnum) return '/client';
+
+    const role = roleEnum.toString().toLowerCase();
+
+    if (role.includes('admin') || role.includes('админ')) {
+        return '/admin';
+    } else if (role.includes('employee') || role.includes('сотрудник') || role.includes('emp')) {
+        return '/employee';
+    } else {
+        return '/client';
+    }
+};
 
 export const AppRouter: React.FC = () => {
+    const { isAuthenticated, loading, user } = useAppStore();
+
+    // Показываем загрузку только при инициализации приложения
+    if (loading) {
+        return (
+            <div className="loading-screen flex-center" style={{ minHeight: '100vh' }}>
+                <div className="loader"></div>
+                <p style={{ marginTop: '1rem', color: 'var(--text-color)' }}>
+                    Загрузка приложения...
+                </p>
+            </div>
+        );
+    }
+
     return (
-        <MemoryRouter>
+        <BrowserRouter>
             <Routes>
+                {/* Публичные маршруты */}
                 <Route
                     path="/login"
                     element={
-                        userService.isAuthenticated() ?
-                            <Navigate to="/dashboard" replace /> :
+                        isAuthenticated ? (
+                            <Navigate to={getRolePath(user?.role)} replace />
+                        ) : (
                             <Login />
+                        )
                     }
                 />
 
-                {/* Protected routes */}
-                <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                        <Dashboard />
-                    </ProtectedRoute>
-                } />
+                {/* Защищенные маршруты по ролям */}
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute requiredRole="admin">
+                            <AdminDashboard />
+                        </ProtectedRoute>
+                    }
+                />
 
-                <Route path="/admin" element={
-                    <ProtectedRoute>
-                        <AdminDashboard />
-                    </ProtectedRoute>
-                } />
+                <Route
+                    path="/employee"
+                    element={
+                        <ProtectedRoute requiredRole="employee">
+                            <EmployeeDashboard />
+                        </ProtectedRoute>
+                    }
+                />
 
-                <Route path="/employee" element={
-                    <ProtectedRoute>
-                        <EmployeeDashboard />
-                    </ProtectedRoute>
-                } />
+                <Route
+                    path="/client"
+                    element={
+                        <ProtectedRoute>
+                            <ClientDashboard />
+                        </ProtectedRoute>
+                    }
+                />
 
-                <Route path="/client" element={
-                    <ProtectedRoute>
-                        <ClientDashboard />
-                    </ProtectedRoute>
-                } />
+                {/* Редиректы */}
+                <Route
+                    path="/dashboard"
+                    element={
+                        isAuthenticated ? (
+                            <Navigate to={getRolePath(user?.role)} replace />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
 
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route
+                    path="/"
+                    element={
+                        isAuthenticated ? (
+                            <Navigate to={getRolePath(user?.role)} replace />
+                        ) : (
+                            <Navigate to="/login" replace />
+                        )
+                    }
+                />
+
+                {/* Страница 404 */}
+                <Route
+                    path="*"
+                    element={
+                        <div className="container" style={{
+                            padding: 'var(--spacing-xl)',
+                            textAlign: 'center'
+                        }}>
+                            <div className="card">
+                                <h2>404 - Страница не найдена</h2>
+                                <p>Запрошенная страница не существует.</p>
+                                <button
+                                    className="btn"
+                                    onClick={() => {
+                                        if (isAuthenticated) {
+                                            window.location.href = getRolePath(user?.role);
+                                        } else {
+                                            window.location.href = '/login';
+                                        }
+                                    }}
+                                    style={{ marginTop: 'var(--spacing-lg)' }}
+                                >
+                                    Вернуться на главную
+                                </button>
+                            </div>
+                        </div>
+                    }
+                />
             </Routes>
-        </MemoryRouter>
+        </BrowserRouter>
     );
 };

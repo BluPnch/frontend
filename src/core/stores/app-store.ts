@@ -1,16 +1,17 @@
-// core/stores/app-store.ts
 import { create } from 'zustand';
 import { userService } from '../services/user-service';
+import type { AuthUser } from '../models/user'; // Измените импорт
 
 interface AppStore {
-    user: any | null;
+    user: AuthUser | null; // Измените тип
     isAuthenticated: boolean;
     loading: boolean;
+
     login: (username: string, password: string) => Promise<void>;
     register: (email: string, password: string) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
-    getCurrentUser: () => Promise<any>; // Добавьте эту строку
+    getCurrentUser: () => Promise<AuthUser | null>; // Измените тип
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
@@ -24,17 +25,25 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
             const userData = await userService.login(username, password);
             console.log('Login successful, userData:', userData);
-            
+
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            const currentUser = await userService.getCurrentUser();
-            console.log('Current user retrieved:', currentUser);
+            const currentUser = await userService.getCurrentUser() as AuthUser; // Приведение типа
+            console.log('Current AuthUser retrieved:', currentUser);
 
             set({
                 user: currentUser,
                 isAuthenticated: true,
                 loading: false
             });
+
+            // РЕДИРЕКТ НА ОСНОВЕ РОЛИ
+            const role = currentUser?.role?.toString() || 'client';
+            console.log('👑 User role for redirect:', role);
+
+            // Не используем window.location.href чтобы сохранить SPA навигацию
+            // Вместо этого вернем роль для использования в компоненте
+
         } catch (error) {
             console.error('Login failed in store:', error);
             set({
@@ -46,10 +55,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
         }
     },
 
+    // Обновите register аналогично
     register: async (email: string, password: string) => {
         try {
             const userData = await userService.register(email, password);
-            const currentUser = await userService.getCurrentUser();
+            const currentUser = await userService.getCurrentUser() as AuthUser;
 
             set({
                 user: currentUser,
@@ -78,7 +88,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     checkAuth: async () => {
         try {
             if (userService.isAuthenticated()) {
-                const currentUser = await userService.getCurrentUser();
+                const currentUser = await userService.getCurrentUser() as AuthUser;
                 set({
                     user: currentUser,
                     isAuthenticated: true,
@@ -102,7 +112,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
     getCurrentUser: async () => {
         try {
-            const currentUser = await userService.getCurrentUser();
+            const currentUser = await userService.getCurrentUser() as AuthUser;
             set({ user: currentUser });
             return currentUser;
         } catch (error) {
