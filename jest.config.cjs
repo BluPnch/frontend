@@ -22,7 +22,7 @@ const config = {
     ],
   },
   collectCoverageFrom: [
-    'src/core/services/*.ts',
+    'src/core/services/*-service.ts',
     '!src/**/*.d.ts',
     '!src/**/*.test.ts',
   ],
