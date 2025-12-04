@@ -32,41 +32,40 @@ export const PlantsTab: React.FC<PlantsTabProps> = ({
     return (
         <div className="plants-tab">
             <div className="tab-header">
-                <h3>Растения</h3>
-            </div>
 
-            {plants.length === 0 ? (
-                <div className="empty-state">
-                    <p>Растения не найдены</p>
-                </div>
-            ) : (
-                <div className="table-container">
-                    <table className="data-table">
-                        <thead>
-                        <tr>
-                            <th>Вид</th>
-                            <th>Семейство</th>
-                            <th>Цветок</th>
-                            <th>Плод</th>
-                            <th>Размножение</th>
-                            <th>Клиент</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {plants.map(plant => (
-                            <tr key={plant.id}>
-                                <td>{plant.specie || '-'}</td>
-                                <td>{plant.family || '-'}</td>
-                                <td>{getFlowerName(plant.flower)}</td>
-                                <td>{getFruitName(plant.fruit)}</td>
-                                <td>{getReproductionName(plant.reproduction)}</td>
-                                <td>{getClientName(plant.clientId)}</td>
+                {plants.length === 0 ? (
+                    <div className="empty-state">
+                        <p>Растения не найдены</p>
+                    </div>
+                ) : (
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead>
+                            <tr>
+                                <th>Вид</th>
+                                <th>Семейство</th>
+                                <th>Цветок</th>
+                                <th>Плод</th>
+                                <th>Размножение</th>
+                                <th>Клиент</th>
                             </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                            </thead>
+                            <tbody>
+                            {plants.map(plant => (
+                                <tr key={plant.id}>
+                                    <td>{plant.specie || '-'}</td>
+                                    <td>{plant.family || '-'}</td>
+                                    <td>{getFlowerName(plant.flower)}</td>
+                                    <td>{getFruitName(plant.fruit)}</td>
+                                    <td>{getReproductionName(plant.reproduction)}</td>
+                                    <td>{getClientName(plant.clientId)}</td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

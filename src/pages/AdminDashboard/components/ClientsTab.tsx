@@ -191,66 +191,65 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ clients, onAssignAsEmplo
             />
 
             <div className="tab-header">
-                <h2>Клиенты</h2>
-            </div>
 
-            {clients.length === 0 ? (
-                <div className="empty-state">
-                    <p>Клиенты не найдены</p>
-                    <p className="empty-state-description">
-                        Добавьте клиентов через административную панель или API
-                    </p>
-                </div>
-            ) : (
-                <div className="table-container">
-                    <table className="data-table">
-                        <thead>
-                        <tr>
-                            <th>Компания</th>
-                            <th>Телефон</th>
-                            <th>ID</th>
-                            <th>Действия</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {clients.map(client => {
-                            // Проверяем данные клиента перед отображением
-                            if (!validateClientData(client)) {
-                                return null; // Пропускаем некорректные записи
-                            }
+                {clients.length === 0 ? (
+                    <div className="empty-state">
+                        <p>Клиенты не найдены</p>
+                        <p className="empty-state-description">
+                            Добавьте клиентов через административную панель или API
+                        </p>
+                    </div>
+                ) : (
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead>
+                            <tr>
+                                <th>Компания</th>
+                                <th>Телефон</th>
+                                <th>ID</th>
+                                <th>Действия</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {clients.map(client => {
+                                // Проверяем данные клиента перед отображением
+                                if (!validateClientData(client)) {
+                                    return null; // Пропускаем некорректные записи
+                                }
 
-                            return (
-                                <tr key={client.id}>
-                                    <td>
-                                        {client.companyName || 'Не указано'}
-                                        {!client.companyName && (
-                                            <span className="text-muted"> (без названия)</span>
-                                        )}
-                                    </td>
-                                    <td>{formatPhoneNumber(client.phoneNumber || '')}</td>
-                                    <td className="id-cell" title={client.id}>
-                                        {truncateId(client.id!)}
-                                    </td>
-                                    <td>
-                                        <button
-                                            className="btn btn-primary btn-sm"
-                                            onClick={() => handleAssignClick(
-                                                client.id!,
-                                                client.companyName || '',
-                                                client.phoneNumber || ''
+                                return (
+                                    <tr key={client.id}>
+                                        <td>
+                                            {client.companyName || 'Не указано'}
+                                            {!client.companyName && (
+                                                <span className="text-muted"> (без названия)</span>
                                             )}
-                                            title={`Назначить "${client.companyName || 'клиента'}" сотрудником`}
-                                        >
-                                            Назначить сотрудником
-                                        </button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                                        </td>
+                                        <td>{formatPhoneNumber(client.phoneNumber || '')}</td>
+                                        <td className="id-cell" title={client.id}>
+                                            {truncateId(client.id!)}
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="btn btn-primary btn-sm"
+                                                onClick={() => handleAssignClick(
+                                                    client.id!,
+                                                    client.companyName || '',
+                                                    client.phoneNumber || ''
+                                                )}
+                                                title={`Назначить "${client.companyName || 'клиента'}" сотрудником`}
+                                            >
+                                                Назначить сотрудником
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

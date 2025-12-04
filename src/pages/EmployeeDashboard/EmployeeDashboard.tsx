@@ -1,6 +1,6 @@
 ﻿import React, {useEffect, useState} from 'react';
 import { Layout } from '../../ui/layout/Layout';
-import type {Client, Employee, User} from '../../core/models/user';
+import type {AuthUser, Client, Employee, User} from '../../core/models/user';
 import type { Plant, Seed, JournalRecord, GrowthStage } from '../../core/models/product';
 
 import {
@@ -67,14 +67,12 @@ export const EmployeeDashboard: React.FC = () => {
                 return;
             }
 
-            // Проверяем роль - сотрудник ИЛИ админ может зайти
             const role = user.role?.toString().toLowerCase() || '';
 
             if (!role.includes('employee') &&
                 !role.includes('сотрудник') &&
                 !role.includes('admin') &&
                 !role.includes('админ')) {
-                // Если не сотрудник и не админ, перенаправляем на клиентский dashboard
                 navigate('/client');
                 return;
             }

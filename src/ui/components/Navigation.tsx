@@ -9,34 +9,29 @@ export const Navigation: React.FC = () => {
     const getAvailableRoutes = () => {
         if (!user) return [];
 
-        const routes = [];
+        const baseRoutes = [
+            { path: '/dashboard', label: 'Главная', icon: '🏠' },
+        ];
 
         // Добавляем маршруты в зависимости от роли
         switch (user.role) {
             case 'admin':
-                routes.push(
-                    { path: '/admin', label: 'Админ-панель', icon: '👑' },
+                return [...baseRoutes,
+                    { path: '/admin', label: 'Админ', icon: '👑' },
                     { path: '/employee', label: 'Сотрудники', icon: '👨‍💼' },
                     { path: '/client', label: 'Клиенты', icon: '👥' }
-                );
-                break;
+                ];
             case 'employee':
-                routes.push(
+                return [...baseRoutes,
                     { path: '/employee', label: 'Рабочая панель', icon: '👨‍💼' }
-                );
-                break;
+                ];
             case 'client':
-                routes.push(
+                return [...baseRoutes,
                     { path: '/client', label: 'Мои растения', icon: '🌱' }
-                );
-                break;
+                ];
             default:
-                routes.push(
-                    { path: '/client', label: 'Главная', icon: '🏠' }
-                );
+                return baseRoutes;
         }
-
-        return routes;
     };
 
     const routes = getAvailableRoutes();

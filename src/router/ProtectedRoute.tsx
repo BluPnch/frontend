@@ -74,18 +74,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     if (!isAuthenticated) {
-        // Сохраняем текущий путь для редиректа после входа
         return <Navigate to="/login" state={{ from: location.pathname }} replace />;
     }
 
-    // Если пользователь пытается попасть на общий dashboard - перенаправляем на его роль
     if (location.pathname === '/dashboard' || location.pathname === '/') {
         return <Navigate to={getRolePath(user?.role)} replace />;
     }
 
-    // Проверка роли для защищенных маршрутов
     if (!hasRequiredRole(user?.role, requiredRole)) {
-        // Перенаправляем на dashboard соответствующей роли
         return <Navigate to={getRolePath(user?.role)} replace />;
     }
 

@@ -33,43 +33,42 @@ export const JournalTab: React.FC<JournalTabProps> = ({
     return (
         <div className="journal-tab">
             <div className="tab-header">
-                <h3>Журнал записей</h3>
-            </div>
 
-            {records.length === 0 ? (
-                <div className="empty-state">
-                    <p>Записи в журнале не найдены</p>
-                </div>
-            ) : (
-                <div className="table-container">
-                    <table className="data-table">
-                        <thead>
-                        <tr>
-                            <th>Дата</th>
-                            <th>Растение</th>
-                            <th>Стадия роста</th>
-                            <th>Сотрудник</th>
-                            <th>Высота (см)</th>
-                            <th>Плоды</th>
-                            <th>Состояние</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {records.map(record => (
-                            <tr key={record.id}>
-                                <td>{new Date(record.date).toLocaleDateString('ru-RU')}</td>
-                                <td>{getPlantInfo(record.plantId)}</td>
-                                <td>{getGrowthStageName(record.growthStageId)}</td>
-                                <td>{getEmployeeName(record.employeeId)}</td>
-                                <td>{record.plantHeight}</td>
-                                <td>{record.fruitCount}</td>
-                                <td>{getConditionName(record.condition)}</td>
+                {records.length === 0 ? (
+                    <div className="empty-state">
+                        <p>Записи в журнале не найдены</p>
+                    </div>
+                ) : (
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Растение</th>
+                                <th>Стадия роста</th>
+                                <th>Сотрудник</th>
+                                <th>Высота (см)</th>
+                                <th>Плоды</th>
+                                <th>Состояние</th>
                             </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                            </thead>
+                            <tbody>
+                            {records.map(record => (
+                                <tr key={record.id}>
+                                    <td>{new Date(record.date).toLocaleDateString('ru-RU')}</td>
+                                    <td>{getPlantInfo(record.plantId)}</td>
+                                    <td>{getGrowthStageName(record.growthStageId)}</td>
+                                    <td>{getEmployeeName(record.employeeId)}</td>
+                                    <td>{record.plantHeight}</td>
+                                    <td>{record.fruitCount}</td>
+                                    <td>{getConditionName(record.condition)}</td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

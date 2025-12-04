@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { Layout } from '../../ui/layout/Layout';
-import type { User } from '../../core/models/user';
+import type { AuthUser } from '../../core/models/user'; // Используем AuthUser вместо User
 import type { Plant, JournalRecord } from '../../core/models/product';
 import { JournalTab, PlantsTab } from './components';
 import { userService } from "../../core/services/user-service.ts";
@@ -9,13 +9,13 @@ import {
     convertPlantsArray,
     convertJournalRecordsArray
 } from '../../core/utils/type-converters';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 type TabType = 'journal' | 'plants';
 
 export const ClientDashboard: React.FC = () => {
     const navigate = useNavigate();
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [currentUser, setCurrentUser] = useState<AuthUser | null>(null); // Используем AuthUser
     const [activeTab, setActiveTab] = useState<TabType>('journal');
     const [plants, setPlants] = useState<Plant[]>([]);
     const [journalRecords, setJournalRecords] = useState<JournalRecord[]>([]);
@@ -35,25 +35,37 @@ export const ClientDashboard: React.FC = () => {
     const init = async () => {
         try {
             setLoading(true);
-            const user = await userService.getCurrentUser();
+            const user = await userService.getCurrentUser() as AuthUser; // Приводим к AuthUser
+
             if (!user) {
-                window.location.href = '/login';
+                navigate('/login'); // Используем navigate вместо window.location.href
                 return;
             }
 
-            // Проверяем роль
-            if (user.role !== 'client') {
-                window.location.href = `/${user.role}`;
+            // Проверяем роль (AuthUser имеет поле role)
+            const role = user.role?.toString().toLowerCase() || '';
+
+            // Если админ или сотрудник - перенаправляем на их dashboard
+            if (role.includes('admin') || role.includes('админ')) {
+                navigate('/admin');
                 return;
             }
 
+            if (role.includes('employee') || role.includes('сотрудник') || role.includes('emp')) {
+                navigate('/employee');
+                return;
+            }
+
+            // Если клиент или роль не определена - остаемся здесь
             setCurrentUser(user);
             await loadAllData();
+
         } catch (error) {
             console.error('Initialization failed:', error);
             showAlertMessage('Ошибка загрузки данных', 'error');
+
             if (error instanceof Error && (error.message.includes('401') || error.message.includes('Unauthorized'))) {
-                window.location.href = '/login';
+                navigate('/login'); // Используем navigate
             }
         } finally {
             setLoading(false);
@@ -159,7 +171,7 @@ export const ClientDashboard: React.FC = () => {
                         <JournalTab
                             records={journalRecords}
                             plants={plants}
-                            employees={[]} 
+                            employees={[]}
                             growthStages={[]}
                             clients={[]}
                             getClientName={() => '-'}
